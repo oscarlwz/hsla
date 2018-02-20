@@ -17,7 +17,6 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter, FormatStrFormatter
-mpl.style.use('classic')
 import scipy.interpolate as sp
 import glob
 import os
@@ -320,8 +319,8 @@ def find_and_plot_coadds(targname, pathname, LAMBDA_MIN, LAMBDA_MAX, MIN_FLUX, M
         copy['FLUX'][i_clip_short] = coadd['FLUX'][i_clip_short] 
         copy['FLUX'][i_clip_long] = coadd['FLUX'][i_clip_long] 
         plot_spectrum(output_name, coadd['WAVE'], coadd['FLUX'], 900, 2160, 0, MAX_FLUX, \
-                window=window, wc=wc, labeltext=labeltext, error=coadd['ERROR'], smooth=6, color='red', \
-                overwave=copy['WAVE'],overflux=copy['FLUX'],overwgt=copy['DQ']+1.,overerror=copy['ERROR'],overcolor='0.96' )
+		window=window, wc=wc, labeltext=labeltext, error=coadd['ERROR'], smooth=6, color='red', \
+		overwave=copy['WAVE'],overflux=copy['FLUX'],overwgt=copy['DQ']+1.,overerror=copy['ERROR'],overcolor='0.96' )
         addfig = addfig + r"""<br><img src='"""+pathname+output_name+r"""' style="width:100%">"""
 
     if(os.path.exists(targname+'_FUV_M_coadd.dat')):

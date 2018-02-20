@@ -15,6 +15,7 @@ import fitsio
 import glob
 import argparse
 
+
 def sort_targets(catalog): 
 
     #### first thing we do is open the MAST-provided data catalog
@@ -24,7 +25,7 @@ def sort_targets(catalog):
 
     #### then create target name directories if they don't exist 
     for target in targets['Target Name']: 
-        if not (os.path.exists(target)): 
+	if not (os.path.exists(target)): 
             os.system('mkdir ./'+ target) 
             print 'SORT_TARGETS: created directory for target: ', target
 

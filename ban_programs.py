@@ -5,12 +5,12 @@ import os
 
 def ban_programs(targets):
 
-    banned_programs_list = ascii.read('/grp/hst/HST_spectro/hsla_ben/banned_programs')
+    banned_programs_list = ascii.read('/grp/hst/HST_spectro/samples/banned_programs')
 
     canonical = ascii.read(targets+'.list')
 
     dirlist = canonical['targname'] # [np.where(canonical['flag'] == 1)]
-               # programs shouldl be banned whther or not target is used 
+			# programs shouldl be banned whther or not target is used 
 
     for dirname in dirlist:
 

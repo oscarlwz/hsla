@@ -10,6 +10,7 @@ import argparse
 
 import quick_look
 import add
+import plot_interactive 
 import sys
 
 
@@ -76,14 +77,8 @@ def drive_dirlist(dirc):
                 print dirname+ ":  JT Coadd already exists, skipping  "
             else:
                 print dirname+ ":  Running add"
-                coadd = add.main('FUVM', '1')
-                coadd = add.main('FUVM', '2')
-                coadd = add.main('FUVM', '3')
-                coadd = add.main('FUVM', '12')
-                coadd = add.main('FUVL', '1')
-                coadd = add.main('FUVL', '2')
-                coadd = add.main('FUVL', '3')
-                coadd = add.main('FUVL', '12')
+                coadd = add.main('FUVM')
+                coadd = add.main('FUVL')
     
             if clobber != 1 and os.path.exists(dirname+'_quicklook.html'):
                 print dirname+ ":  Quicklook already exists, skipping  "

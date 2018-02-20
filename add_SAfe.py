@@ -32,6 +32,7 @@ def main(screen, lifetime, Linda=False):
     #               STEP 2: screen out the exposures that we don't want to have                           #
     #######################################################################################################
 
+    #lifetime = 'ALL'
     print 'We will perform coadds for lifetime position : ', lifetime 
     tt, h0, h1 = screen_dict_of_exposures(tt, h0, h1, screen=screen, lifetime=lifetime)
     number_of_remaining_exposures = np.size(h0.keys())
@@ -97,21 +98,17 @@ def main(screen, lifetime, Linda=False):
 
     count_exposures(out_dict)
 
-    # This is where the "final_all"  and "final_lp"-specific dictionary entries are created 
     if (out_dict['number_of_G130M_exposures'] > 0):
         final_wave_130 = get_wavelength_grid('G130M')
         out_dict['G130M_final_all'] = create_coadd_format(final_wave_130)
-        out_dict['G130M_final_lp'+lifetime] = create_coadd_format(final_wave_130)
 
     if (out_dict['number_of_G160M_exposures'] > 0):
         final_wave_160 = get_wavelength_grid('G160M')
         out_dict['G160M_final_all'] = create_coadd_format(final_wave_160)
-        out_dict['G160M_final_lp'+lifetime] = create_coadd_format(final_wave_160)
 
     if (out_dict['number_of_G140L_exposures'] > 0):
         final_wave_140 = get_wavelength_grid('G140L')
         out_dict['G140L_final_all'] = create_coadd_format(final_wave_140)
-        out_dict['G140L_final_lp'+lifetime] = create_coadd_format(final_wave_140)
 
     if (out_dict['number_of_G185M_exposures'] > 0):
         final_wave_185 = get_wavelength_grid('G185M')
@@ -128,7 +125,7 @@ def main(screen, lifetime, Linda=False):
     for nn in tt.keys():                                    ##### Add a few column to the exposure table for the "newpix"
 
         if ('FUV' in screen): tt[nn]['NEWPIX'] = tt[nn]['FLUX'] * 0.0 +  np.arange(16384)
-        #if ('NUV' in screen): tt[nn]['NEWPIX'] = tt[nn]['FLUX'] * 0.0 +  np.arange(1274)
+        if ('NUV' in screen): tt[nn]['NEWPIX'] = tt[nn]['FLUX'] * 0.0 +  np.arange(1274)
 
         tt[nn]['NEWPIX'].unit = ' '
 
@@ -163,19 +160,124 @@ def main(screen, lifetime, Linda=False):
     print '       G185M: ', out_dict['number_of_G185M_exposures']
     print '       G225M: ', out_dict['number_of_G225M_exposures']
 
+    print "POTENTIAL PROBLEM HERE PRIOR TO RUNNING COS_COUNTS_COADD ON ALL LPs: " 
+    print 'number of keys in h0table', np.size(out_dict['h0table'].keys()), out_dict['h0table'].keys() 
+    print 'number of keys in exp_interp_table', np.size(out_dict['exp_interp_table'].keys()), out_dict['exp_interp_table'].keys() 
+
     if (out_dict['number_of_G130M_exposures'] > 0):
         out_dict = cos_counts_coadd(out_dict, 'G130M_final_all')
-        out_dict = cos_counts_coadd(out_dict, 'G130M_final_lp'+lifetime)
     if (out_dict['number_of_G160M_exposures'] > 0):
         out_dict = cos_counts_coadd(out_dict, 'G160M_final_all')
-        out_dict = cos_counts_coadd(out_dict, 'G160M_final_lp'+lifetime)
     if (out_dict['number_of_G140L_exposures'] > 0):
         out_dict = cos_counts_coadd(out_dict, 'G140L_final_all')
-        out_dict = cos_counts_coadd(out_dict, 'G140L_final_lp'+lifetime)
     if (out_dict['number_of_G185M_exposures'] > 0):
         out_dict = cos_counts_coadd(out_dict, 'G185M_final_all')
     if (out_dict['number_of_G225M_exposures'] > 0):
         out_dict = cos_counts_coadd(out_dict, 'G225M_final_all')
+
+#    lp1_dict = copy.deepcopy(out_dict)                             #### now we're going to do LP1 with cos_counts_coadd
+#    count_exposures(lp1_dict)
+#    print "Screening ", np.size(lp1_dict['exptable'].keys()), ' exposures to get LP = 1'
+#    tt_lp1, h0_lp1, h1_lp1 = screen_dict_of_exposures(lp1_dict['exptable'], lp1_dict['h0table'], lp1_dict['h1table'], screen=screen, lifetime=1)
+#    get_interp_exptable(lp1_dict) 			     
+#    exposure_interpolate(lp1_dict)			     
+#    count_exposures(lp1_dict)
+#    print "There are ", number_of_remaining_exposures, ' exposures at LP = 1'
+#    if (lp1_dict['number_of_G130M_exposures'] > 0):
+#        print "We will now coadd ", lp1_dict['number_of_G130M_exposures'], " at LP = 1"
+#        lp1_dict['G130M_final_lp1'] = create_coadd_format(final_wave_130)
+#        lp1_dict = cos_counts_coadd(lp1_dict, 'G130M_final_lp1')
+#        if (lp1_dict['number_of_G130M_exposures'] > 0): out_dict['G130M_final_lp1'] = lp1_dict['G130M_final_all']
+#    if (lp1_dict['number_of_G160M_exposures'] > 0):
+#        print "We will now coadd ", lp1_dict['number_of_G160M_exposures'], " at LP = 1"
+#        lp1_dict['G160M_final_lp1'] = create_coadd_format(final_wave_160)
+#        lp1_dict = cos_counts_coadd(lp1_dict, 'G160M_final_lp1')
+#        if (lp1_dict['number_of_G160M_exposures'] > 0): out_dict['G160M_final_lp1'] = lp1_dict['G160M_final_all']
+#    if (lp1_dict['number_of_G140L_exposures'] > 0):
+#        print "We will now coadd ", lp1_dict['number_of_G140L_exposures'], " at LP = 1"
+#        lp1_dict['G140L_final_lp1'] = create_coadd_format(final_wave_140)
+#        lp1_dict = cos_counts_coadd(lp1_dict, 'G140L_final_lp1')
+#        if (lp1_dict['number_of_G140L_exposures'] > 0): out_dict['G140L_final_lp1'] = lp1_dict['G140L_final_all']
+#
+#
+#    lp2_dict = copy.deepcopy(out_dict)                             #### now we're going to do LP2 with cos_counts_coadd
+#    count_exposures(lp2_dict)
+#    print "Screening ", np.size(lp2_dict['exptable'].keys()), ' exposures to get LP = 2'
+#    tt_lp2, h0_lp2, h1_lp2 = screen_dict_of_exposures(lp2_dict['exptable'], lp2_dict['h0table'], lp2_dict['h1table'], screen=screen, lifetime=2)
+#    get_interp_exptable(lp2_dict) 			     
+#    exposure_interpolate(lp2_dict)			     
+#    count_exposures(lp2_dict)
+#    number_of_remaining_exposures = np.size(h0_lp2.keys())
+#    print "There are ", number_of_remaining_exposures, ' exposures at LP = 2'
+#    if (lp2_dict['number_of_G130M_exposures'] > 0):
+#        print "We will now coadd ", lp2_dict['number_of_G130M_exposures'], " at LP = 2"
+#        lp2_dict['G130M_final_lp2'] = create_coadd_format(final_wave_130)
+#        lp2_dict = cos_counts_coadd(lp2_dict, 'G130M_final_lp2')
+#        if (lp2_dict['number_of_G130M_exposures'] > 0): out_dict['G130M_final_lp2'] = lp2_dict['G130M_final_all']
+#    if (lp2_dict['number_of_G160M_exposures'] > 0):
+#        print "We will now coadd ", lp2_dict['number_of_G160M_exposures'], " at LP = 2"
+#        lp2_dict['G160M_final_lp2'] = create_coadd_format(final_wave_160)
+#        lp2_dict = cos_counts_coadd(lp2_dict, 'G160M_final_lp2')
+#        if (lp2_dict['number_of_G160M_exposures'] > 0): out_dict['G160M_final_lp2'] = lp2_dict['G160M_final_all']
+#    if (lp2_dict['number_of_G140L_exposures'] > 0):
+#        print "We will now coadd ", lp2_dict['number_of_G140L_exposures'], " at LP = 2"
+#        lp2_dict['G140L_final_lp2'] = create_coadd_format(final_wave_140)
+#        lp2_dict = cos_counts_coadd(lp2_dict, 'G140L_final_lp2')
+#        if (lp2_dict['number_of_G140L_exposures'] > 0): out_dict['G140L_final_lp2'] = lp2_dict['G140L_final_all']
+#
+#    lp3_dict = copy.deepcopy(out_dict)                             #### now we're going to do LP3 with cos_counts_coadd
+#    count_exposures(lp3_dict)
+#    print "Screening ", np.size(lp3_dict['exptable'].keys()), ' exposures to get LP = 3'
+#    tt_lp3, h0_lp3, h1_lp3 = screen_dict_of_exposures(lp3_dict['exptable'], lp3_dict['h0table'], lp3_dict['h1table'], screen=screen, lifetime=3)
+#    get_interp_exptable(lp3_dict) 			     
+#    exposure_interpolate(lp3_dict)			     
+#    count_exposures(lp3_dict)
+#    number_of_remaining_exposures = np.size(h0_lp3.keys())
+#    print "There are ", number_of_remaining_exposures, ' exposures at LP = 3'
+#    if (lp3_dict['number_of_G130M_exposures'] > 0):
+#        print "We will now coadd ", lp3_dict['number_of_G130M_exposures'], " at LP = 3"
+#        lp3_dict['G130M_final_lp3'] = create_coadd_format(final_wave_130)
+#        lp3_dict = cos_counts_coadd(lp3_dict, 'G130M_final_lp3')
+#        if (lp3_dict['number_of_G130M_exposures'] > 0): out_dict['G130M_final_lp3'] = lp3_dict['G130M_final_all']
+#    if (lp3_dict['number_of_G160M_exposures'] > 0):
+#        print "We will now coadd ", lp3_dict['number_of_G160M_exposures'], " at LP = 3"
+#        lp3_dict['G160M_final_lp3'] = create_coadd_format(final_wave_160)
+#        lp3_dict = cos_counts_coadd(lp3_dict, 'G160M_final_lp3')
+#        if (lp3_dict['number_of_G160M_exposures'] > 0): out_dict['G160M_final_lp3'] = lp3_dict['G160M_final_all']
+#    if (lp3_dict['number_of_G140L_exposures'] > 0):
+#        print "We will now coadd ", lp3_dict['number_of_G140L_exposures'], " at LP = 3"
+#        lp3_dict['G140L_final_lp3'] = create_coadd_format(final_wave_140)
+#        lp3_dict = cos_counts_coadd(lp3_dict, 'G140L_final_lp3')
+#        if (lp3_dict['number_of_G140L_exposures'] > 0): out_dict['G140L_final_lp3'] = lp3_dict['G140L_final_all']
+
+
+#    lp12_dict = copy.deepcopy(out_dict)                             #### now we're going to do LP1+2 with cos_counts_coadd
+#    count_exposures(lp12_dict)
+#    print "Screening ", np.size(lp12_dict['exptable'].keys()), ' exposures to get LP = 1+2'
+#    tt_lp12, h0_lp12, h1_lp12 = screen_dict_of_exposures(lp12_dict['exptable'], lp12_dict['h0table'], lp12_dict['h1table'], screen=screen, lifetime=12) 
+#    get_interp_exptable(lp12_dict) 			     
+#    exposure_interpolate(lp12_dict)			     
+#    count_exposures(lp12_dict)
+#    number_of_remaining_exposures = np.size(h0_lp12.keys())
+#    print "There are ", number_of_remaining_exposures, ' exposures at LP = 3'
+#    if (lp12_dict['number_of_G130M_exposures'] > 0):
+#        print "We will now coadd ", lp12_dict['number_of_G130M_exposures'], " at LP = 1+2"
+#        lp12_dict['G130M_final_lp12'] = create_coadd_format(final_wave_130)
+#        lp12_dict = cos_counts_coadd(lp12_dict, 'G130M_final_lp12')
+#        if (lp12_dict['number_of_G130M_exposures'] > 0): out_dict['G130M_final_lp12'] = lp12_dict['G130M_final_all']
+#    if (lp12_dict['number_of_G160M_exposures'] > 0):
+#        print "We will now coadd ", lp12_dict['number_of_G160M_exposures'], " at LP = 1+2"
+#        lp12_dict['G160M_final_lp12'] = create_coadd_format(final_wave_160)
+#        lp12_dict = cos_counts_coadd(lp12_dict, 'G160M_final_lp12')
+#        if (lp12_dict['number_of_G160M_exposures'] > 0): out_dict['G160M_final_lp12'] = lp12_dict['G160M_final_all']
+#    if (lp12_dict['number_of_G140L_exposures'] > 0):
+#        print "We will now coadd ", lp12_dict['number_of_G140L_exposures'], " at LP = 1+2"
+#        lp12_dict['G140L_final_lp12'] = create_coadd_format(final_wave_140)
+#        lp12_dict = cos_counts_coadd(lp12_dict, 'G140L_final_lp12')
+#        if (lp12_dict['number_of_G140L_exposures'] > 0): out_dict['G140L_final_lp12'] = lp12_dict['G140L_final_all']
+
+
+
 
     #######################################################################################################
     #               STEP 10:  obtain wavelength shifts for each exposure relatiive to the coadd, apply    #
@@ -205,13 +307,13 @@ def main(screen, lifetime, Linda=False):
 
     if (out_dict.__contains__('G130M_final_lp1')): obtain_chi2(out_dict, 'G130M_final_lp1') 
     if (out_dict.__contains__('G160M_final_lp1')): obtain_chi2(out_dict, 'G160M_final_lp1') 
- 
+
     if (out_dict.__contains__('G130M_final_lp2')): obtain_chi2(out_dict, 'G130M_final_lp2') 
     if (out_dict.__contains__('G160M_final_lp2')): obtain_chi2(out_dict, 'G160M_final_lp2') 
- 
+
     if (out_dict.__contains__('G130M_final_lp3')): obtain_chi2(out_dict, 'G130M_final_lp3') 
     if (out_dict.__contains__('G160M_final_lp3')): obtain_chi2(out_dict, 'G160M_final_lp3') 
- 
+
     if (out_dict.__contains__('G130M_final_lp12')): obtain_chi2(out_dict, 'G130M_final_lp12') 
     if (out_dict.__contains__('G160M_final_lp12')): obtain_chi2(out_dict, 'G160M_final_lp12') 
 
@@ -244,6 +346,7 @@ def main(screen, lifetime, Linda=False):
     return out_dict
 
 
+
 ######## 
 ######## 
 ######## 
@@ -267,14 +370,14 @@ def splice_fuv(out_dict, key_to_combine):
        i_130 = np.max(np.where(g130m['WAVE'] < splitwave))  
        i_160 = np.min(np.where(g160m['WAVE'] > splitwave))  
        out_dict['FUVM_final_'+key_to_combine] = vstack([ g130m[0:i_130], g160m[i_160:-1] ]) 
-       print "SPLICE_FUV ", key_to_combine, splitwave 
+       print "SPLICE_FUV", splitwave 
     elif (np.size(where_160) < 1): 
        where_160 = np.where((g160m['DQ'] > 0.) & (g160m['WAVE'] <  1450)) 
        splitwave = np.max(g160m['WAVE'][np.where((g160m['DQ'] > 0.) & (g160m['WAVE'] <  1450))]) + 1. 
        i_130 = np.max(np.where(g130m['WAVE'] < splitwave))  
        i_160 = np.min(np.where(g160m['WAVE'] > splitwave))  
        out_dict['FUVM_final_'+key_to_combine] = vstack([ g130m[0:i_130], g160m[i_160:-1] ]) 
-       print "SPLICE_FUV ", key_to_combine, splitwave 
+       print "SPLICE_FUV", splitwave 
     else: 
        print 'Problem with splitwave, nothing will be done' 
        
@@ -336,10 +439,17 @@ def get_wavelength_shifts(out_dict):
 
         i = 0 
         for shifter in shifts: 
+          #  fig = plt.figure(figsize=(8,4),dpi=300)
+          #  ax = fig.add_subplot(111) 
             coeff_here = np.correlate(np.roll(exp_flux[where2],shifter), coadd_flux[where1]) 
+            #print "GET_WAVELENGTH SHIFTS", shifter, coeff_here 
             print 'EXP', exp_keys[nn], grating, wavelimits, shifter, coeff_here[0]
             coeffs[i] = coeff_here[0] 
     	    i = i + 1 
+          #  ax.step(coadd_wave[where1], coadd_flux[where1]) 
+          #  ax.step(exp_wave[where2], np.roll(exp_flux[where2],shifter), color='red') 
+          #  plt.savefig('exp'+str(exp_keys[nn])+'_'+str(shifter)+'.png')
+          #  plt.close() 
  
         best_shift = shifts[np.where(coeffs == np.max(coeffs))] 
         print 'BEST SHIFT', exp_keys[nn], grating, wavelimits, best_shift, coeffs[np.where(coeffs == np.max(coeffs))]
@@ -775,7 +885,7 @@ def cos_counts_coadd(out_dict, key_to_combine):
         final_table['FLUXERR_DOWN'][i_good_pixels] = final_table['NETCOUNTSERR_DOWN'][i_good_pixels] * final_table['FLUXFACTOR'][i_good_pixels] 
 
 ##### WATCH OT THERE MAY BE A PROBLEM HERE!!!!! 
-        #print "WATCH OUT THERE MAY BE A PROBLEM HERE!!!!" 
+        print "WATCH OUT THERE MAY BE A PROBLEM HERE!!!!" 
         final_table['ERROR'][i_good_pixels] = final_table['FLUXERR_DOWN'][i_good_pixels] 
         final_table['ERROR'][i_good_pixels] = final_table['FLUXERR_UP'][i_good_pixels] 
 
@@ -851,7 +961,7 @@ def screen_dict_of_exposures(tt, h0, h1, screen='FUVM', lifetime='ALL'):        
     print 'SCREEN_DICT_OF_EXPOSURES: The requested LP is: ', lifetime
 
     if (screen == 'FUVM' and lifetime == 'ALL'):                # for FUVM and all LPs
-         print 'condition 1' 
+         print '1' 
          for i in h0.keys():
             if (h0[i]['DETECTOR'] == 'FUV' and (h0[i]['OPT_ELEM'] == 'G130M' or h0[i]['OPT_ELEM'] == 'G160M') and h0[i]['CENWAVE'] > 1250):
                 print 'SCREEN_DICT_OF_EXPOSURES 1: Keeping dictionary entry for ', h0[i]['ROOTNAME'], h0[i]['DETECTOR'], h0[i]['OPT_ELEM'], h0[i]['CENWAVE'], h0[i]['LIFE_ADJ']
@@ -860,18 +970,18 @@ def screen_dict_of_exposures(tt, h0, h1, screen='FUVM', lifetime='ALL'):        
                 del tt[i]
                 del h0[i]
                 del h1[i]
-    elif (screen == 'FUVM' and ((lifetime == '1') or (lifetime == '2') or (lifetime == '3'))  ):                     # for FUVM and a specific LP
-         print 'condition 2' 
+    elif (screen == 'FUVM' and lifetime < 10):                     # for FUVM and a specific LP
+         print '2' 
          for i in h0.keys():
-            if (h0[i]['DETECTOR'] == 'FUV' and (h0[i]['OPT_ELEM'] == 'G130M' or h0[i]['OPT_ELEM'] == 'G160M') and h0[i]['CENWAVE'] > 1250 and h0[i]['LIFE_ADJ'] == int(lifetime)):
+            if (h0[i]['DETECTOR'] == 'FUV' and (h0[i]['OPT_ELEM'] == 'G130M' or h0[i]['OPT_ELEM'] == 'G160M') and h0[i]['CENWAVE'] > 1250 and h0[i]['LIFE_ADJ'] == lifetime):
                 print 'SCREEN_DICT_OF_EXPOSURES 2: Keeping dictionary entry for ', h0[i]['ROOTNAME'], h0[i]['DETECTOR'], h0[i]['OPT_ELEM'], h0[i]['CENWAVE'], h0[i]['LIFE_ADJ']
             else:
                 print 'SCREEN_DICT_OF_EXPOSURES 2: Deleting dictionary entry for ', h0[i]['ROOTNAME'], h0[i]['DETECTOR'], h0[i]['OPT_ELEM'], h0[i]['CENWAVE'], h0[i]['LIFE_ADJ']
                 del tt[i]
                 del h0[i]
                 del h1[i]
-    elif (screen == 'FUVM' and lifetime == '12'):				# for FUVM and 1+2 combo 
-         print 'condition 3' 
+    elif (screen == 'FUVM' and lifetime == 12):				# for FUVM and 1+2 combo 
+         print '3' 
          for i in h0.keys():
             if (h0[i]['DETECTOR'] == 'FUV' and (h0[i]['OPT_ELEM'] == 'G130M' or h0[i]['OPT_ELEM'] == 'G160M') and h0[i]['CENWAVE'] > 1250 and h0[i]['LIFE_ADJ'] < 3 and h0[i]['LIFE_ADJ'] > 0):
                 print 'SCREEN_DICT_OF_EXPOSURES 2: Keeping dictionary entry for ', h0[i]['ROOTNAME'], h0[i]['DETECTOR'], h0[i]['OPT_ELEM'], h0[i]['CENWAVE'], h0[i]['LIFE_ADJ']
@@ -881,7 +991,7 @@ def screen_dict_of_exposures(tt, h0, h1, screen='FUVM', lifetime='ALL'):        
                 del h0[i]
                 del h1[i]
     elif (screen == 'FUVL' and lifetime == 'ALL'):                     # for FUVL and a specific LP
-         print 'condition 4' 
+         print '4' 
          for i in h0.keys():
             if (h0[i]['DETECTOR'] == 'FUV' and h0[i]['OPT_ELEM'] == 'G140L'):
                 print 'SCREEN_DICT_OF_EXPOSURES 2: Keeping dictionary entry for ', h0[i]['ROOTNAME'], h0[i]['DETECTOR'], h0[i]['OPT_ELEM'], h0[i]['CENWAVE'], h0[i]['LIFE_ADJ']
@@ -891,7 +1001,7 @@ def screen_dict_of_exposures(tt, h0, h1, screen='FUVM', lifetime='ALL'):        
                 del h0[i]
                 del h1[i]
     elif (screen == 'FUVL'):                        # for FUVL 
-         print 'condition 5' 
+         print '5' 
          for i in h0.keys():
             if (h0[i]['DETECTOR'] == 'FUV' and h0[i]['OPT_ELEM'] == 'G140L' and h0[i]['LIFE_ADJ'] == lifetime):
                 print 'SCREEN_DICT_OF_EXPOSURES 3: Keeping dictionary entry for ', h0[i]['ROOTNAME'], h0[i]['DETECTOR'], h0[i]['OPT_ELEM'], h0[i]['CENWAVE'], h0[i]['LIFE_ADJ']
@@ -901,7 +1011,7 @@ def screen_dict_of_exposures(tt, h0, h1, screen='FUVM', lifetime='ALL'):        
                 del h0[i]
                 del h1[i]
     elif (screen == 'FUVL'):                        # for FUVL and combo of 1+2 
-         print 'condition 6' 
+         print '6' 
          for i in h0.keys():
             if (h0[i]['DETECTOR'] == 'FUV' and h0[i]['OPT_ELEM'] == 'G140L' and h0[i]['LIFE_ADJ'] < 3):
                 print 'SCREEN_DICT_OF_EXPOSURES 3: Keeping dictionary entry for ', h0[i]['ROOTNAME'], h0[i]['DETECTOR'], h0[i]['OPT_ELEM'], h0[i]['CENWAVE'], h0[i]['LIFE_ADJ']
@@ -911,7 +1021,7 @@ def screen_dict_of_exposures(tt, h0, h1, screen='FUVM', lifetime='ALL'):        
                 del h0[i]
                 del h1[i]
     elif (screen == 'NUVM' and lifetime == 'ALL'):                        # for NUVM 
-         print 'condition 7' 
+         print '7' 
          for i in h0.keys():
             if (h0[i]['DETECTOR'] == 'NUV' and (h0[i]['OPT_ELEM'] == 'G185M' or h0[i]['OPT_ELEM'] == 'G225M')): 
                 print 'SCREEN_DICT_OF_EXPOSURES 3: Keeping dictionary entry for ', h0[i]['ROOTNAME'], h0[i]['DETECTOR'], h0[i]['OPT_ELEM'], h0[i]['CENWAVE'], h0[i]['LIFE_ADJ']
@@ -929,55 +1039,62 @@ def screen_dict_of_exposures(tt, h0, h1, screen='FUVM', lifetime='ALL'):        
 
 def write_output(out_dict, Linda):
 
-    lifetime = out_dict['lifetime'] 
+    ##### note this currently does not write out the fits header, prob requires astropy.io.fits
+    if (out_dict.__contains__('G130M_final_all')): write_fits_output(out_dict,'G130M_final_all')
+    if (out_dict.__contains__('G160M_final_all')): write_fits_output(out_dict,'G160M_final_all')
+    if (out_dict.__contains__('G140L_final_all')): write_fits_output(out_dict,'G140L_final_all') 
 
-    if (out_dict.__contains__('G130M_final_lp'+lifetime)): write_fits_output(out_dict,'G130M_final_lp'+lifetime)
-    if (out_dict.__contains__('G160M_final_lp'+lifetime)): write_fits_output(out_dict,'G160M_final_lp'+lifetime)
-    if (out_dict.__contains__('G140L_final_lp'+lifetime)): write_fits_output(out_dict,'G140L_final_lp'+lifetime)
-    if (out_dict.__contains__('FUVM_final_lp'+lifetime)): write_fits_output(out_dict,'FUVM_final_lp'+lifetime)
+    ##### note this currently does not write out the fits header, prob requires astropy.io.fits
+    #if (out_dict.__contains__('G130M_final_shifted')): write_fits_output(out_dict,'G130M_final_shifted')
+
+    #### LP1 
+    if (out_dict.__contains__('G130M_final_lp1')): write_fits_output(out_dict,'G130M_final_lp1')
+    if (out_dict.__contains__('G160M_final_lp1')): write_fits_output(out_dict,'G160M_final_lp1')
+    if (out_dict.__contains__('G140L_final_lp1')): write_fits_output(out_dict,'G140L_final_lp1')
+
+    #### LP2 
+    if (out_dict.__contains__('G130M_final_lp2')): write_fits_output(out_dict,'G130M_final_lp2')
+    if (out_dict.__contains__('G160M_final_lp2')): write_fits_output(out_dict,'G160M_final_lp2')
+    if (out_dict.__contains__('G140L_final_lp2')): write_fits_output(out_dict,'G140L_final_lp2')
+
+    #### LP3 
+    if (out_dict.__contains__('G130M_final_lp3')): write_fits_output(out_dict,'G130M_final_lp3')
+    if (out_dict.__contains__('G160M_final_lp3')): write_fits_output(out_dict,'G160M_final_lp3')
+    if (out_dict.__contains__('G140L_final_lp3')): write_fits_output(out_dict,'G140L_final_lp3')
+
+    #### LP1+2 
+    if (out_dict.__contains__('G130M_final_lp12')): write_fits_output(out_dict,'G130M_final_lp12')
+    if (out_dict.__contains__('G160M_final_lp12')): write_fits_output(out_dict,'G160M_final_lp12')
+    if (out_dict.__contains__('G140L_final_lp12')): write_fits_output(out_dict,'G140L_final_lp12')
+
+    #### FUV SPLICE 
+    if (out_dict.__contains__('FUVM_final_all')): write_fits_output(out_dict,'FUVM_final_all')
+    if (out_dict.__contains__('FUVM_final_lp1')): write_fits_output(out_dict,'FUVM_final_lp1')
+    if (out_dict.__contains__('FUVM_final_lp2')): write_fits_output(out_dict,'FUVM_final_lp2')
+    if (out_dict.__contains__('FUVM_final_lp3')): write_fits_output(out_dict,'FUVM_final_lp3')
+    if (out_dict.__contains__('FUVM_final_lp12')): write_fits_output(out_dict,'FUVM_final_lp12')
+
+    if (out_dict['lifetime'] == 1): print 'HELL YES ITS LP1', out_dict['lifetime'] 
+    if (out_dict['lifetime'] == 2): print 'HELL YES ITS LP2', out_dict['lifetime'] 
+    if (out_dict['lifetime'] == 3): print 'HELL YES ITS LP3', out_dict['lifetime'] 
+    if (out_dict['lifetime'] == 12): print 'HELL YES ITS LP12', out_dict['lifetime'] 
+
+
 
     #### THIS IS A KLUDGE TO COPY THE SINGLE-GRATING FUV COADD INTO THE FUVM FILE IF ONLY ONE EXISTS 
-    if (out_dict.__contains__('G130M_final_lp'+lifetime) and not out_dict.__contains__('G160M_final_lp'+lifetime)): 
-        filename1 = out_dict['targname']+'_coadd_G130M_final_lp'+lifetime+'.fits.gz'
-        filename2 = out_dict['targname']+'_coadd_FUVM_final_lp'+lifetime+'.fits.gz'
-        command = 'cp -rp '+filename1+' '+filename2 
-        os.system(command) 
-        print 'I HAVE G130M BUT NOT G160M', command 
-    if (out_dict.__contains__('G160M_final_lp'+lifetime) and not out_dict.__contains__('G130M_final_lp'+lifetime)):  
-        filename1 = out_dict['targname']+'_coadd_G160M_final_lp'+lifetime+'.fits.gz'
-        filename2 = out_dict['targname']+'_coadd_FUVM_final_lp'+lifetime+'.fits.gz'
-        command = 'cp -rp '+filename1+' '+filename2 
-        os.system(command) 
-        print 'I HAVE G160M BUT NOT G130M', command 
-
-    if (out_dict.__contains__('FUVM_final_lp3')): # fourth best choice for "all" 
-        print "Using 4th best choice for all" 
-        filename1 = out_dict['targname']+'_coadd_FUVM_final_lp3.fits.gz'
+    if (out_dict.__contains__('G130M_final_lp1') and not out_dict.__contains__('G160M_final_lp1')): 
+        filename1 = out_dict['targname']+'_coadd_G130M_final_all.fits.gz'
         filename2 = out_dict['targname']+'_coadd_FUVM_final_all.fits.gz'
         command = 'cp -rp '+filename1+' '+filename2 
         os.system(command) 
+        print 'DAMMIT I HAVE G130M BUT NOT G160M', command 
+    if (out_dict.__contains__('G160M_final_lp1') and not out_dict.__contains__('G130M_final_lp1')):  
+        filename1 = out_dict['targname']+'_coadd_G160M_final_all.fits.gz'
+        filename2 = out_dict['targname']+'_coadd_FUVM_final_all.fits.gz'
+        command = 'cp -rp '+filename1+' '+filename2 
+        os.system(command) 
+        print 'DAMMIT I HAVE G160M BUT NOT G130M', command 
     
-    if (out_dict.__contains__('FUVM_final_lp2')): # third best choice for "all" 
-        print "Using 3rd best choice for all" 
-        filename1 = out_dict['targname']+'_coadd_FUVM_final_lp2.fits.gz'
-        filename2 = out_dict['targname']+'_coadd_FUVM_final_all.fits.gz'
-        command = 'cp -rp '+filename1+' '+filename2 
-        os.system(command) 
-        
-    if (out_dict.__contains__('FUVM_final_lp1')): # second best choice for "all" 
-        print "Using 2nd best choice for all" 
-        filename1 = out_dict['targname']+'_coadd_FUVM_final_lp1.fits.gz'
-        filename2 = out_dict['targname']+'_coadd_FUVM_final_all.fits.gz'
-        command = 'cp -rp '+filename1+' '+filename2 
-        os.system(command) 
-
-    if (out_dict.__contains__('FUVM_final_lp12')): # best choice for "all" 
-        print "Using 1st best choice for all" 
-        filename1 = out_dict['targname']+'_coadd_FUVM_final_lp12.fits.gz'
-        filename2 = out_dict['targname']+'_coadd_FUVM_final_all.fits.gz'
-        command = 'cp -rp '+filename1+' '+filename2 
-        os.system(command) 
-
 
     #### SPECIAL PROCESSING 
     if (Linda): 

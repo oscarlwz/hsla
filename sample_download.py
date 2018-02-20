@@ -4,7 +4,7 @@ import numpy as np
 
 def sample_download(canonical_filename): 
 
-    os.chdir('/grp/hst/HST_spectro/distro/datapile') 
+    os.chdir('/grp/hst/HST_spectro/datapile') 
 	
     canonical = ascii.read('../samples/'+canonical_filename+'.list') 
     print canonical['flag']

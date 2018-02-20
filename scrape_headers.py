@@ -92,15 +92,17 @@ def scrape_headers(targets,altnames,redshifts):
 
                 if have_alt_names: 
                     i_alt = np.where(altname_table[:]['Target Name'] == dirname)
-                    print 'Redshift = ', altname_table[int(i_alt[0])][12] 
-                    altname_string = altname_table[int(i_alt[0])][16] 
-                    if 'No match' in altname_table[int(i_alt[0])][11]: altname_string = ' . . . ' 
-                    altname_class = altname_table[int(i_alt[0])][14] 
-                    redshift_string = str(altname_table[int(i_alt[0])][12]) 
+                    #print 'Redshift = ', altname_table[int(i_alt[0])][13] # not sure 
+                    #altname_string = altname_table[int(i_alt[0])][12] 
+                    #if 'No match' in altname_table[int(i_alt[0])][11]: altname_string = ' . . . ' # not sure 
+                    #altname_class = altname_table[int(i_alt[0])][15] 
+                    #redshift_string = str(altname_table[int(i_alt[0])][13]) 
 
-                    webtable_row[7] = altname_string 
-                    webtable_row[8] = altname_class 
-                    webtable_row[9] = redshift_string 
+                    webtable_row[7] = altname_table['AltName'][int(i_alt[0])]
+                    if 'No match' in webtable_row[7]: webtable_row[7] = ' . . . ' 
+                    webtable_row[8] = altname_table['AltNameClass'][int(i_alt[0])]
+                    webtable_row[9] = altname_table['AltNameRedshift'][int(i_alt[0])]
+
 
                 sample_webtable.add_row(webtable_row) 
                 sample_fitstable.add_row(fitstable_row)

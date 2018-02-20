@@ -1,7 +1,7 @@
 
 import numpy as np
 from astropy.table import Table, Column, vstack 
-from bokeh.plotting import figure, show, output_file
+from bokeh.plotting import figure, show, output_file, vplot
 from bokeh.models import BoxAnnotation
 
 
