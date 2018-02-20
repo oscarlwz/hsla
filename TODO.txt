@@ -1,0 +1,49 @@
+
+This is the global TODO list for 50 Megapictures 
+————————————————————————————————————————————————
+
+Spectator (MSP) 
+————————————————
+- fix time_flux labels
+- are the grey error vectors in the quicklook plots correct? They look too large. 
+- EBJ: I suggest that you replace the current explanation of S/N values with the following statement: 
+“Error vectors depicted as a gray trace and S/N values stated for the colored shaded bands represent errors
+per pixel in the unsmoothed spectrum.”
+- EBJ: Vertical scaling in the plots looks good and thankfully avoids being fooled by the L-alpha emission
+or bad pixels at the extreme ends of the spectra.  This is a real improvement over what we often
+see in the MAST quick look displays.  The only situations that I found where the scaling was not
+optimal was for quasar spectra with very strong emission peaks.  Of course, if you rescale to
+show the top of the emission profile, you badly suppress the amplitude of the spectrum elsewhere.
+Perhaps a solution to this would be to have the parts clipped at the top “roll over” and reappear
+at the bottom, i.e., modulo the intensity value at the top of y-axis in the plot.  Then, one could see the top
+of the emission and the continuum level elsewhere at a good scaling, all in a single plot.  You
+probably would want to show the rolled over portion in a different color.
+- EBJ: What kind of smoothing did you implement for the display?  Box car or Gaussian?  I think
+a Gaussian kernel would give slightly better results.
+- EBJ: I did not find the flux vs. time plots very interesting (e.g., look at the one for CTS0216).  Even
+when I examined the plot for an object that had 60 observations (QSO-J1701+6412), it looks
+rather boring.  Is this feature really useful?  Maybe so, but I did not see any cases of this sort.
+Incidentally,  the listing for QSO-J1701+6412 seems to be duplicated in two rows.
+
+
+MAST integration
+————————————————
+- EBJ: As I mentioned during the meeting, it would be good to have a GUI similar to the 
+view/customize plot option for individual exposures in the MAST quick look page.
+If you have trouble linking to the program that does this in MAST, perhaps you could
+simply steal their code and duplicate it on your own system?
+
+
+
+
+Praise
+——————
+Ed Jenkins: “I too find the archive nicely organized, easy to use, and potentially very useful for future investigators.
+You’ve done a really nice job!”
+
+Charles Danforth: “First of all, I'm super-impressed by the web interface.  It's really cool stuff and fun to delve through. . . . [boring stuff about data]. . . In any case, impressive work, Molly.”
+
+
+
+
+

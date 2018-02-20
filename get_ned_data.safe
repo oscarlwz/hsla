@@ -1,0 +1,74 @@
+
+
+import os 
+from astropy.io.votable import parse_single_table
+from astropy.table import unique as tabunique
+from astropy.table import Table
+from astropy.io import ascii
+import numpy as np 
+
+def get_ned_data(): 
+
+    #### THIS SHOWS BASIC USAGE FOR NED TO GET OUT THE REDSHIFTS BASED ON A NEAR-POSITION SEARCH THAT OUTPUTS AND THEN PARSES AN XML VOTABLE (!) 
+    #### WILL THIS WORK IN A SIMULAR FASHION FOR SIMBAD? I DON'T KNOW !! 
+
+    catalog = 'test.txt'
+    catalog = 'cos_exposures_Oct26_2015.txt' 
+    targets = ascii.read(catalog) 
+    del targets['Ref', 'Start Time', 'Stop Time', 'Exp Time','Apertures', 'Release Date', 'Preview Name', 'High-Level Science Products'] 
+
+    unique_targets = tabunique(targets, keys='Target Name') # now try to cull out those with no aliases 
+    unique_targets['NED Name'] = 'No match found in NED           ' 
+    unique_targets['Redshift'] = '  . . .  ' 
+    unique_targets['NED Angsep'] = '. . .   ' 
+    unique_targets['NED Class'] = ' . . .  ' 
+
+    for i in np.arange(np.size(unique_targets['RA (J2000)'])): 
+	ra = unique_targets['RA (J2000)'][i] 
+	dec = unique_targets['Dec (J2000)'][i] 
+
+	##### THIS GETS THE NED INFO 
+        command1 = 'wget -q -O ned.xml "http://ned.ipac.caltech.edu/cgi-bin/objsearch?in_csys=Equatorial&in_equinox=J2000.0&lon=' 
+        command2 = 'd&lat='
+        command3 = 'd&corr_z=1&z_constraint=Unconstrained&z_value1=&z_value2=&z_unit=z&ot_include=ANY&nmp_op=ANY&out_csys=Equatorial&out_equinox=J2000.0&obj_sort=Distance+to+search+center&of=xml_main&radius=5&zv_breaker=30000.0&list_limit=5&img_stamp=YES&search_type=Near+Position+Search"' 
+        command = command1 + str(ra) + command2 + str(dec) + command3 
+        print 'Searching Target: ', unique_targets['Target Name'][i], ra, dec 
+	print command 
+
+        os.system(command) 
+
+        votable = parse_single_table("ned.xml")# .to_table()
+	if (np.size(votable.fields) > 2):
+            table = votable.to_table() 
+
+            i_close = np.where(table['main_col10'] < 0.015) 
+            #print 'i_close', i_close
+	    #print np.size(i_close) 
+
+            if (np.size(i_close) > 0): 
+                canonical_name = table['main_col2'][i_close[0]] 
+ 
+                ned_class = table['main_col5'][i_close[0]]
+                #print 'Canonical Name', canonical_name 
+
+                redshift = table['main_col7'][i_close[0]] 
+                #print 'Redshift', redshift 
+ 	
+ 		angsep = table['main_col10'][i_close[0]] 
+
+                unique_targets['NED Name'][i] = canonical_name[0] 
+                unique_targets['Redshift'][i] = redshift[0] 
+                unique_targets['NED Class'][i] = ned_class[0] 
+                unique_targets['NED Angsep'][i] = angsep[0] 
+        else: 
+		print "No object found by NED, sorry!" 
+ 
+        print unique_targets[i] 
+	os.system('rm ned.xml') 
+
+    unique_targets.write('unique_targets_ned.html', format='jsviewer') 
+    unique_targets.write('unique_targets_ned.fits', format='fits', overwrite=True) 
+
+    return unique_targets 
+
+ 
