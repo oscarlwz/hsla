@@ -423,7 +423,8 @@ def make_new_datapile(begin, end, new, reprocessed, new_path, old_path):
 
 def new_file_query(begin, end):
     """
-    Queries MAST for new and reprocessed COS files within a certain date range.
+    Queries MAST for new and reprocessed COS and STIS files within a certain 
+    date range.
 
     Parameters
     ----------
@@ -444,29 +445,67 @@ def new_file_query(begin, end):
         Contains the proposal IDs of the new datasets.
     """
 
-    # Query for all new files
+    # Query for all new COS files
     url = 'https://archive.stsci.edu/hst/search.php?'
     url += '&sci_instrume=COS&sci_obs_type=spectrum&sci_aec=%' #for cal+sci
     url += '&sci_release_date={}..{}'.format(begin, end)
     url += '&max_records=50001&outputformat=CSV'
     url += '&selectedColumnsCsv=sci_data_set_name,sci_targname,sci_pep_id'
     url += '&action=Search'
-    new = pd.read_csv(url, skiprows=[1]) # skip datatype row
-    if len(new)==0:
-        new = pd.DataFrame({'Dataset':[], 'Target Name':[], 'Proposal ID':[]})
-        print('No new files in this time range.')
+    new_cos = pd.read_csv(url, skiprows=[1]) # skip datatype row
+    if len(new_cos)==0:
+        new_cos = pd.DataFrame({'Dataset':[], 'Target Name':[], 'Proposal ID':[]})
+        print('No new COS files in this time range.')
 
-    # Query for all reprocessed files
+    # Query for all new STIS files
+    url = 'https://archive.stsci.edu/hst/search.php?'
+    url += '&sci_instrume=STIS&sci_obs_type=spectrum&sci_aec=%'
+    url += '&sci_release_date={}..{}'.format(begin, end)
+    url += '&sci_aper_1234=0.2X0.2,0.2x0.2FP*&sci_spec_1234=E230M,E140M'
+    url += '&max_records=50001&outputformat=CSV'
+    url += '&selectedColumnsCsv=sci_data_set_name,sci_targname,sci_pep_id'
+    url += '&action=Search'
+    new_stis = pd.read_csv(url, skiprows=[1]) # skip datatype row
+    if len(new_stis)==0:
+        new_stis = pd.DataFrame({'Dataset':[], 'Target Name':[], 'Proposal ID':[]})
+        print('No new STIS files in this time range.')
+
+    # Query for all COS reprocessed files
     url = 'https://archive.stsci.edu/hst/search.php?'
     url += '&sci_instrume=COS&sci_obs_type=spectrum&sci_aec=%'
     url += '&sci_archive_date={}..{}&sci_release_date=%3C{}'.format(begin, 
            end, end)
     url += '&max_records=50001&outputformat=CSV'
-    url += '&selectedColumnsCsv=sci_data_set_name&action=Search'
-    reprocessed = pd.read_csv(url, skiprows=[1])
-    if len(reprocessed)==0:
-        reprocessed = pd.DataFrame({'Dataset':[]})
-        print('No reprocessed files in this time range.')
+    url += '&selectedColumnsCsv=sci_data_set_name,sci_targname&action=Search'
+    reprocessed_cos = pd.read_csv(url, skiprows=[1])
+    if len(reprocessed_cos)==0:
+        reprocessed_cos = pd.DataFrame({'Dataset':[], 'Target Name':[]})
+        print('No reprocessed COS files in this time range.')
+
+    # Query for all STIS reprocessed files
+    url = 'https://archive.stsci.edu/hst/search.php?'
+    url += '&sci_instrume=STIS&sci_obs_type=spectrum&sci_aec=%'
+    url += '&sci_archive_date={}..{}&sci_release_date=%3C{}'.format(begin, 
+           end, end)
+    url += '&sci_aper_1234=0.2X0.2,0.2x0.2FP*&sci_spec_1234=E230M,E140M'
+    url += '&max_records=50001&outputformat=CSV'
+    url += '&selectedColumnsCsv=sci_data_set_name,sci_targname&action=Search'
+    reprocessed_stis = pd.read_csv(url, skiprows=[1])
+    if len(reprocessed_stis)==0:
+        reprocessed_stis = pd.DataFrame({'Dataset':[], 'Target Name':[]})
+        print('No reprocessed STIS files in this time range.')
+
+    # Combine the COS and STIS results and get rid of bad targets
+    new = pd.concat([new_cos, new_stis], ignore_index=True)
+    if len(new) != 0:
+        new = new[((new['Target Name'] != 'ANY') & 
+                   (new['Target Name'] != 'WAVE') & 
+                   (new['Target Name'] != 'CCDFLAT'))].reset_index(drop=True)
+    reprocessed = pd.concat([reprocessed_cos, reprocessed_stis], ignore_index=True)
+    if len(reprocessed) != 0:
+        reprocessed = reprocessed[((reprocessed['Target Name'] != 'ANY') & 
+                                   (reprocessed['Target Name'] != 'WAVE') & 
+                                   (reprocessed['Target Name'] != 'CCDFLAT'))].reset_index(drop=True)
 
     # Return the new/reprocessed dataset names and new target names/prop IDs
     new_datasets = new['Dataset'].values
