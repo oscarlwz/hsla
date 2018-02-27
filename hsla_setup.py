@@ -136,8 +136,8 @@ def ban_visits(new_props, new_path, old_path):
 
 def make_full_catalog(end, new_path):
     """
-    Makes a full datapile catalog containing every COS spectrograph observation
-    from launch to the given end date.
+    Makes a full datapile catalog containing every COS/STIS spectrograph 
+    observation from launch to the given end date.
 
     Parameters
     ----------
@@ -165,20 +165,34 @@ def make_full_catalog(end, new_path):
     url += 'sci_target_descrip,sci_broad_category,sci_start_time&action=Search'
     print('Ignore the following 4 skipping line warnings. These will be added '
            'below. If there are more than 4, need to fix.')
-    df = pd.read_csv(url, error_bad_lines=False, skiprows=[1]) # skip dtype row
+    df_cos = pd.read_csv(url, error_bad_lines=False, skiprows=[1]) # skip dtype row
 
     # One person put an extra column in the target description for some 
     # asteroid obervations; this was skipped above with the 
     # 'error_bad_lines=False' option, so re-add it now.
     df_add = pd.read_csv(os.path.join(HSLA_DIR, 'code/additional_datasets.txt'),
-                         names=df.columns)
-    df = df.append(df_add, ignore_index=True)
+                         names=df_cos.columns)
+    df_cos = df_cos.append(df_add, ignore_index=True)
 
-    # Write out the full datapile catalog
+    # Query MAST for all STIS spectrograph observations from launch to the 
+    # given end date.
+    url = 'https://archive.stsci.edu/hst/search.php?'
+    url += '&sci_instrume=STIS&sci_obs_type=spectrum&sci_aec=%' #for cal+sci
+    url += '&sci_aper_1234=0.2X0.2,0.2x0.2FP*&sci_spec_1234=E230M,E140M'
+    url += '&sci_release_date=%3C{}'.format(end)
+    url += '&max_records=50001&outputformat=CSV&coordformat=dec'
+    url += '&selectedColumnsCsv=sci_data_set_name,sci_targname,sci_ra,sci_dec,'
+    url += 'sci_expflag,sci_actual_duration,sci_instrume,sci_aper_1234,'
+    url += 'sci_spec_1234,sci_central_wavelength,sci_pep_id,sci_status,'
+    url += 'sci_target_descrip,sci_broad_category,sci_start_time&action=Search'
+    df_stis = pd.read_csv(url, error_bad_lines=False, skiprows=[1]) # skip dtype row
+
+    # Combine the COS and STIS catalogs and write out the resulting catalog
+    combined = pd.concat([df_cos, df_stis], ignore_index=True)
     t = dt.datetime.strptime(end, '%m-%d-%Y')
     t = t.strftime('%B%d_%Y')
-    cat_name = os.path.join(new_path, 'cos_exposures_{}_all.txt'.format(t))
-    df.to_csv(cat_name, index=False)
+    cat_name = os.path.join(new_path, 'all_exposures_{}.txt'.format(t))
+    combined.to_csv(cat_name, index=False)
 
     return cat_name
 
