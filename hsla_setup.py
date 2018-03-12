@@ -490,7 +490,8 @@ def new_file_query(begin, end):
     url += '&action=Search'
     new_cos = pd.read_csv(url, skiprows=[1]) # skip datatype row
     if len(new_cos)==0:
-        new_cos = pd.DataFrame({'Dataset':[], 'Target Name':[], 'Proposal ID':[]})
+        new_cos = pd.DataFrame({'Dataset':[], 'Target Name':[], 
+                                'Proposal ID':[]})
         print('No new COS files in this time range.')
 
     # Query for all new STIS files
@@ -503,7 +504,8 @@ def new_file_query(begin, end):
     url += '&action=Search'
     new_stis = pd.read_csv(url, skiprows=[1]) # skip datatype row
     if len(new_stis)==0:
-        new_stis = pd.DataFrame({'Dataset':[], 'Target Name':[], 'Proposal ID':[]})
+        new_stis = pd.DataFrame({'Dataset':[], 'Target Name':[], 
+                                 'Proposal ID':[]})
         print('No new STIS files in this time range.')
 
     # Query for all COS reprocessed files
@@ -537,11 +539,13 @@ def new_file_query(begin, end):
         new = new[((new['Target Name'] != 'ANY') & 
                    (new['Target Name'] != 'WAVE') & 
                    (new['Target Name'] != 'CCDFLAT'))].reset_index(drop=True)
-    reprocessed = pd.concat([reprocessed_cos, reprocessed_stis], ignore_index=True)
+    reprocessed = pd.concat([reprocessed_cos, reprocessed_stis], 
+                            ignore_index=True)
     if len(reprocessed) != 0:
         reprocessed = reprocessed[((reprocessed['Target Name'] != 'ANY') & 
                                    (reprocessed['Target Name'] != 'WAVE') & 
-                                   (reprocessed['Target Name'] != 'CCDFLAT'))].reset_index(drop=True)
+                                   (reprocessed['Target Name'] != 'CCDFLAT'))].\
+                                 reset_index(drop=True)
 
     # Return the new/reprocessed dataset names and new target names/prop IDs
     new_datasets = new['Dataset'].values
@@ -616,14 +620,14 @@ def hsla_setup(begin, end, new_dir, old_dir):
     # The path to the last HSLA release
     old_path = os.path.join(HSLA_DIR, old_dir)
 
-    # Get a list of the new and reprocessed COS spectrograph datasets
+    # Get a list of the new and reprocessed COS/STIS spectrograph datasets
     # (and new target names/prop IDs) that were observed within a certain 
     # time range.
     new, reprocessed, new_targs, new_props = new_file_query(begin, end)
     print('{} new files.'.format(len(new)))
     print('{} reprocessed files.'.format(len(reprocessed)))
 
-    # Make a table containing all failed COS visits. These visits will be
+    # Make a table containing all failed COS/STIS visits. These visits will be
     # excluded in the co-adds.
     ban_visits(new_props, new_path, old_path)
     print('Banned visits table created.')
@@ -632,7 +636,7 @@ def hsla_setup(begin, end, new_dir, old_dir):
     make_new_datapile(begin, end, new, reprocessed, new_path, old_path)
     print('New datapile created.')
 
-    # Make a full exposure catalog of every COS spectrograph observation
+    # Make a full exposure catalog of every COS/STIS spectrograph observation
     # from launch to the given end date.
     cat_name = make_full_catalog(end, new_path)
     print('Full catalog created.')
