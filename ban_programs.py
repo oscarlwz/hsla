@@ -5,29 +5,36 @@ import os
 
 def ban_programs(targets):
 
-    banned_programs_list = ascii.read('/grp/hst/HST_spectro/samples/banned_programs')
-
+    banned_programs_list = ascii.read('/grp/hst/HST_spectro/hsla_releases/code/banned_programs')
+    banned_visits = ascii.read('banned_visits.txt')
     canonical = ascii.read(targets+'.list')
+    dirlist = canonical['targname']
 
-    dirlist = canonical['targname'] # [np.where(canonical['flag'] == 1)]
-			# programs shouldl be banned whther or not target is used 
-
-    for dirname in dirlist:
-
+    for n,dirname in enumerate(dirlist):
         print "Banning Programs for Target: ", dirname
         if os.path.isdir(dirname):
-
             os.chdir(dirname)
- 
+
             if os.path.exists("all_exposures.txt"):
                 exposure_cat = ascii.read("all_exposures.txt")
                 print "read exposures for ", dirname
 
+                # Ban bad proposals
                 for pid_to_ban in banned_programs_list['pid']:
                     mask = np.where(exposure_cat['PropID'] == pid_to_ban)
                     print pid_to_ban, mask
                     exposure_cat['Flag'][mask] = 0
 
+                # Ban failed visits
+                for i,root in enumerate(exposure_cat['Rootname']):
+                    select = ((banned_visits['Proposal'] == exposure_cat['PropID'][i]) & 
+                              (banned_visits['Visit'] == root[4:6]))
+                    if len(banned_visits[select]) != 0:
+                        exposure_cat['Flag'][i] = 0
+
                 ascii.write(exposure_cat, "all_exposures.txt")
 
             os.chdir('..')          # go back to "datapile"
+
+        if n%100==0:
+            print('{}/{} targets completed.'.format(n, len(dirlist)))

@@ -1,0 +1,47 @@
+#pid, comment
+11484, SMOV COS FUV focus determination
+11486, COS FUV Target Acquisition Algorithm Verification
+12052, COS NUV Grating Efficiency Test
+12080, G140L focus sweep
+12082, Non standard cenwaves
+12096, COS FUV Detector Lifetime Position Test
+12432, COS FUV Detector Gain Sag vs. High Voltage
+12676, COS/FUV Characterization of Detector Effects
+12677, COS/FUV Mapping of Stray PtNe Light Through the FCA
+12678, COS/FUV Characterization of Optical Effects
+12793, FUV Detector High Voltage Sweep
+12795, Verification of Aperture and FUV Spectrum Placement at LP2
+12796, Focus sweep Enabling Program at LP2
+12797, Target acquisition verification
+13124, Target acquisition verification
+13525, Cycle 21 COS FUV Detector Gain Maps
+13530, NUV Focus Sweep
+13526, Target acquisition verification
+13617, Characterization of COS/FUV modal gain at LP3
+13618, Optimization of COS/FUV Spectrum placement at LP3
+13634, Verification of Aperture and FUV Spectrum Placement at LP3
+13635, Optimization of COS/FUV Spectrum Placement at LP3
+13636, LP3 FUV Target Acquisition Parameter Updates
+13637, COS FUV Detector Response to New HV Management System at LP3
+13970, COS FUV Detector Gain Maps
+13971, Characterization of HV change on sensitivity
+13972, Target acquisition monitor
+14439, Cycle 23 COS FUV Detector Gain Maps
+14440, Target acquisition monitor
+14525, Characterization of COS/FUV detector modal gain at LP4
+14527, FUV Focus Sweep Exploratory Program for COS at LP4
+14519, COS FUV Detector Gain Maps
+14841, Optimization of COS/FUV spectrum placement at lifetime position 4
+14842, Quick-check of the G130M Spectral Resolution at Lifetime Position 4
+14856, COS/FUV Wavecal lamp template reference files at LP3
+14857, Cycle 24 COS Target Acquisition Monitor
+14869, COS/FUV Wavecorr at LP4
+14874, COS FUV Focus Sweep Program at LP4
+14875, Verification of Aperture and FUV Spectrum Placement for COS at LP4
+14907, COS LP4 FUV Target Acquisition Enabling and Verification
+14929, COS/FUV LP4 Focus Sweep - New G130M/1223 Cenwave
+14941, COS FUV Detector Gain Maps
+15369, COS FUV Lamp Templates at LP4
+15370, COS FUV Gain Map at LP3/LP4
+15386, Cycle 25 COS FUV Target Acquisition Monitor
+15389, Cycle 25 COS NUV Target Acquisition Monitor
