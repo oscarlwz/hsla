@@ -80,7 +80,7 @@ HSLA_DIR = '/grp/hst/HST_spectro/hsla_releases/'
 # -----------------------------------------------------------------------------
 def ban_visits(new_props, new_path, old_path):
     """
-    Makes a table of failed COS visits according to the visit status page
+    Makes a table of failed COS/STIS visits according to the visit status page
     for each proposal. These visits will be excluded in the HSLA co-adds.
     For expediency, new failed visits are appended to the previous release's
     banned_visits.txt file.
@@ -97,7 +97,8 @@ def ban_visits(new_props, new_path, old_path):
     Outputs
     -------
     banned_visits.txt
-        A file containing all of the failed COS visits (with proposal IDs).
+        A file containing all of the failed COS/STIS visits (with proposal 
+        IDs).
     """
 
     # Read in the table of banned visits from the previous release
@@ -109,9 +110,11 @@ def ban_visits(new_props, new_path, old_path):
         url += 'id={}&markupFormat=html&observatory=HST'.format(prop)
         status_report = pd.read_html(url,header=0)[0]
         
-        # Select only visits with COS data
-        status_report = status_report[status_report['Configs'].str.\
-                                      contains('COS')]
+        # Select only visits with COS/STIS data
+        status_report = status_report[((status_report['Configs'].str.\
+                                        contains('COS')) | 
+                                       (status_report['Configs'].str.\
+                                        contains('STIS')))]
 
         # Find any visits with a Status containing the word "Failed"
         failed_visits = status_report['Visit'][status_report['Status'].str.\
@@ -164,7 +167,7 @@ def make_full_catalog(end, new_path):
     url += 'sci_spec_1234,sci_central_wavelength,sci_pep_id,sci_status,'
     url += 'sci_target_descrip,sci_broad_category,sci_start_time&action=Search'
     print('Ignore the following 4 skipping line warnings. These will be added '
-           'below. If there are more than 4, need to fix.')
+          'below. If there are more than 4, need to fix.')
     df_cos = pd.read_csv(url, error_bad_lines=False, skiprows=[1]) # skip dtype row
 
     # One person put an extra column in the target description for some 
@@ -279,7 +282,7 @@ def make_new_datapile(begin, end, new, reprocessed, new_path, old_path):
     update_summary.txt
         A file that summarizes this new HSLA update. It includes a listing
         of all of the new/reprocessed datasets, their target names, and
-        (for reprocessed files) the CALCOS version and calibration files
+        (for reprocessed files) the cal version and calibration files
         used for the old/new version of the dataset (i.e. for the version
         from the previous and new HSLA release). It also contains the
         version numbers of modules that are used in the HSLA creation.
@@ -347,13 +350,21 @@ def make_new_datapile(begin, end, new, reprocessed, new_path, old_path):
 
     outfile.write('\n\nREPROCESSED FILES\n-----------------\n')
 
-    # The keywords to search for why a file was reprocessed - these include
-    # the CALCOS version and calibration reference files.
-    keywords = ['FLATFILE','DEADTAB','BPIXTAB','SPOTTAB','GSAGTAB','HVTAB',
-                'BRFTAB','GEOFILE','DGEOFILE','TRACETAB','PROFTAB','TWOZXTAB',
-                'XWLKFILE','YWLKFILE','WALKTAB','PHATAB','PHAFILE','BADTTAB',
-                'XTRACTAB','LAMPTAB','DISPTAB','IMPHTTAB','FLUXTAB','WCPTAB',
-                'BRSTTAB','TDSTAB','SPWCSTAB','CAL_VER']
+    # The keywords to search for why a COS/STIS file was reprocessed - these
+    # include the cal version and calibration reference files.
+    keywords_cos = ['FLATFILE','DEADTAB','BPIXTAB','SPOTTAB','GSAGTAB','HVTAB',
+                    'BRFTAB','GEOFILE','DGEOFILE','TRACETAB','PROFTAB',
+                    'TWOZXTAB','XWLKFILE','YWLKFILE','WALKTAB','PHATAB',
+                    'PHAFILE','BADTTAB','XTRACTAB','LAMPTAB','DISPTAB',
+                    'IMPHTTAB','FLUXTAB','WCPTAB','BRSTTAB','TDSTAB',
+                    'SPWCSTAB','CAL_VER']
+
+    keywords_stis = ['BPIXTAB','DARKFILE','PFLTFILE','LFLTFILE','PHOTTAB',
+                     'IMPHTTAB','APERTAB','MLINTAB','WAVECAL','APDESTAB',
+                     'SPTRCTAB','DISPTAB','INANGTAB','LAMPTAB','SDCTAB',
+                     'XTRACTAB','PCTAB','MOFFTAB','WCPTAB','CDSTAB','ECHSCTAB',
+                     'EXSTAB','RIPTAB','HALOTAB','TELTAB','SRWTAB','TDSTAB',
+                     'TDCTAB','GACTAB','CAL_VER']
 
     # Get the public archive paths to the x1d's of reprocessed datasets/asns.
     # Copy over any reprocessed files and state the reason for the
@@ -381,12 +392,23 @@ def make_new_datapile(begin, end, new, reprocessed, new_path, old_path):
                                                    os.path.basename(f))):
                     shutil.copy(f, new_path)
                 
+                # Find the matching dataset from the old HSLA release
                 match = glob.glob(os.path.join(old_path, '*/', 
                                                os.path.basename(f)))
                 if len(match) == 1:
                     old = fits.getheader(match[0], 0)
                     new = fits.getheader(f, 0)
                     diff = 0  # to see if anything changed
+
+                    # Get relevant keywords based on instrument
+                    if os.path.basename(f).startswith('l'):
+                        keywords = keywords_cos
+                    elif os.path.basename(f).startswith('o'):
+                        keywords = keywords_stis
+                    else:
+                        print('Dataset doesnt appear to be COS or STIS.')
+
+                    # Loop through the relevant keywords to see what changed
                     for k in keywords:
                         try:
                             new_kwd = new[k]
@@ -417,7 +439,7 @@ def make_new_datapile(begin, end, new, reprocessed, new_path, old_path):
             print('{} / {} reprocessed datasets checked/moved.'.format(i, 
                   len(reprocessed)))
 
-    outfile.write('*** %s x1ds with CALCOS version/reference file '
+    outfile.write('*** %s x1ds with cal version/reference file '
                   'differences in this release ***\n' % n_rep_files)
 
     # Copy over all of the remaining files from the previous HSLA release.
