@@ -23,7 +23,7 @@ def defeat_aliases(aliasfile):
         if aliases['alias0'][i] == original_targname:  
             print "The target name and alias are identical, so I'll do nothing!" 
         else: 
-            move_command = 'mv ./'+original_targname+'/*.fits.gz '+'  ./'+aliases['alias0'][i] 
+            move_command = 'mv ./'+original_targname+'/*.fits '+'  ./'+aliases['alias0'][i] 
             print move_command 
             os.system(move_command) 
 

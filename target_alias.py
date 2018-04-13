@@ -48,7 +48,7 @@ def target_alias(catalog):
         print 
         print index, targets['Target Name'][index]  
         print unique_by_name['Target Name'] 
- 	aliases['alias0'][index] = unique_by_name['Target Name'][0] 
+        aliases['alias0'][index] = unique_by_name['Target Name'][0] 
 
         #print index, targets['Target Name'][index], targets['Target Name'][i_where] 
         unique_by_name = tabunique(targets[:][i_where], keys='Target Name')

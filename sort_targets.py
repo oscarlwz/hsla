@@ -25,7 +25,7 @@ def sort_targets(catalog):
 
     #### then create target name directories if they don't exist 
     for target in targets['Target Name']: 
-	if not (os.path.exists(target)): 
+        if not (os.path.exists(target)): 
             os.system('mkdir ./'+ target) 
             print 'SORT_TARGETS: created directory for target: ', target
 

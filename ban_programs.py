@@ -1,12 +1,13 @@
 #! /usr/bin/env python
 from astropy.io import ascii
+import glob
 import numpy as np
 import os
 
 def ban_programs(targets):
 
     banned_programs_list = ascii.read('/grp/hst/HST_spectro/hsla_releases/code/banned_programs')
-    banned_visits = ascii.read('banned_visits.txt')
+    banned_visits = ascii.read(glob.glob('banned_visits*.txt')[0]) # works for both COS and STIS datapiles
     canonical = ascii.read(targets+'.list')
     dirlist = canonical['targname']
 

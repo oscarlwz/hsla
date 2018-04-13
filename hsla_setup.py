@@ -18,7 +18,7 @@ Use
 ---
     This script can be run via the command line as such:
         
-        python hsla_setup.py --b <MM-DD-YYYY> --e <MM-DD-YYYY> --n <datapile_v#> --o <datapile_v#>
+        python hsla_setup.py --b <MM-DD-YYYY> --e <MM-DD-YYYY> --n <datapile_v#> --o <datapile_v#> --i <COS/STIS>
 
     --b [Required]: The date at which to start the new/reprocessed 
     file search from.
@@ -28,11 +28,12 @@ Use
     this HSLA release.
     --o [Required]: The name of the datapile directory for the previous
     HSLA release.
+    --i [Required]: The instrument to use for this datapile (COS or STIS)
 
     This script can also be run within python:
 
         >>> import hsla_setup as h
-        >>> h.hsla_setup(begin, end, new_dir, old_dir)
+        >>> h.hsla_setup(begin, end, new_dir, old_dir, ins)
     
     begin [Required]: str
         The date to start the search from (MM-DD-YYYY).
@@ -42,6 +43,8 @@ Use
         The name to use for the new datapile directory for this HSLA release.
     old_dir [Required]: str
         The name of the datapile directory for the previous HSLA release.
+    ins [Required]: str
+        The instrument to use for this datapile (COS or STIS).
 
 Notes
 -----
@@ -78,7 +81,7 @@ PUBLIC_DIR = '/ifs/archive/ops/hst/public/'
 HSLA_DIR = '/grp/hst/HST_spectro/hsla_releases/'
 
 # -----------------------------------------------------------------------------
-def ban_visits(new_props, new_path, old_path):
+def ban_visits(new_props, new_path, old_path, ins):
     """
     Makes a table of failed COS/STIS visits according to the visit status page
     for each proposal. These visits will be excluded in the HSLA co-adds.
@@ -93,16 +96,19 @@ def ban_visits(new_props, new_path, old_path):
         The path to the new datapile directory used for this HSLA release.
     old_path : str
         The path to the old datapile directory used for the last HSLA release.
+    ins : str
+        The instrument to use for this datapile (COS or STIS).
 
     Outputs
     -------
-    banned_visits.txt
+    banned_visits_{COS/STIS}.txt
         A file containing all of the failed COS/STIS visits (with proposal 
         IDs).
     """
 
     # Read in the table of banned visits from the previous release
-    banned_visits = ascii.read(os.path.join(old_path, 'banned_visits.txt'))
+    banned_visits = ascii.read(os.path.join(old_path, 
+                               'banned_visits_{}.txt'.format(ins)))
 
     for n,prop in enumerate(np.unique(new_props)):
         # Get the visit status info for this proposal
@@ -111,10 +117,8 @@ def ban_visits(new_props, new_path, old_path):
         status_report = pd.read_html(url,header=0)[0]
         
         # Select only visits with COS/STIS data
-        status_report = status_report[((status_report['Configs'].str.\
-                                        contains('COS')) | 
-                                       (status_report['Configs'].str.\
-                                        contains('STIS')))]
+        status_report = status_report[(status_report['Configs'].str.\
+                                        contains(ins))]
 
         # Find any visits with a Status containing the word "Failed"
         failed_visits = status_report['Visit'][status_report['Status'].str.\
@@ -132,12 +136,13 @@ def ban_visits(new_props, new_path, old_path):
         print('Done searching for failed visits in proposal {}.'.format(prop))
         print('{}/{} proposals checked.'.format(n, len(np.unique(new_props))))
 
-    # Write out the updated banned visits table
-    ascii.write(banned_visits, os.path.join(new_path, 'banned_visits.txt'))
+    # Write out the updated banned visits table for this instrument
+    ascii.write(banned_visits, 
+                os.path.join(new_path, 'banned_visits_{}.txt'.format(ins)))
 
 # -----------------------------------------------------------------------------
 
-def make_full_catalog(end, new_path):
+def make_full_catalog(end, new_path, ins):
     """
     Makes a full datapile catalog containing every COS/STIS spectrograph 
     observation from launch to the given end date.
@@ -148,6 +153,8 @@ def make_full_catalog(end, new_path):
         The date to end the search from (MM-DD-YYYY).
     new_path : str
         The path to write the CSV to.
+    ins : str
+        The instrument to use for this datapile (COS or STIS).
 
     Outputs
     -------
@@ -190,18 +197,21 @@ def make_full_catalog(end, new_path):
     url += 'sci_target_descrip,sci_broad_category,sci_start_time&action=Search'
     df_stis = pd.read_csv(url, error_bad_lines=False, skiprows=[1]) # skip dtype row
 
-    # Combine the COS and STIS catalogs and write out the resulting catalog
-    combined = pd.concat([df_cos, df_stis], ignore_index=True)
+    # Write out the catalog of interest
     t = dt.datetime.strptime(end, '%m-%d-%Y')
     t = t.strftime('%B%d_%Y')
-    cat_name = os.path.join(new_path, 'all_exposures_{}.txt'.format(t))
-    combined.to_csv(cat_name, index=False)
+    if ins == 'COS':
+        cat_name = os.path.join(new_path, '{}_exposures_{}_all.txt'.format(ins, t))
+        df_cos.to_csv(cat_name, index=False)
+    if ins == 'STIS':
+        cat_name = os.path.join(new_path, '{}_exposures_{}_all.txt'.format(ins, t))
+        df_stis.to_csv(cat_name, index=False)
 
     return cat_name
 
 # -----------------------------------------------------------------------------
 
-def make_new_alias(new_targets, new_path, old_path):
+def make_new_alias(new_targets, new_path, old_path, ins):
     """
     Makes an alias file containing only new target names. This is the file
     that will be manually edited to select the correct alias name to use for
@@ -215,6 +225,8 @@ def make_new_alias(new_targets, new_path, old_path):
         The path to the new datapile directory used for this HSLA release.
     old_path : str
         The path to the old datapile directory used for the last HSLA release.
+    ins : str
+        The instrument to use for this datapile (COS or STIS).
 
     Outputs
     -------
@@ -248,12 +260,12 @@ def make_new_alias(new_targets, new_path, old_path):
         new_alias.add_row(['' for c in range(len(cols))])
         print('None of the new datasets have new target names.')
 
-    new_alias.write(f[0].replace('all.alias','new.alias'), 
+    new_alias.write(f[0].replace('_all.alias', '_new.alias'), 
                     format='ascii.fixed_width_two_line')
 
 # -----------------------------------------------------------------------------
 
-def make_new_datapile(begin, end, new, reprocessed, new_path, old_path):
+def make_new_datapile(begin, end, new, reprocessed, new_path, old_path, ins):
     """
     Sets up a new datapile directory containing all relevant datasets,
     including new/reprocessed ones. The new/reprocessed lists from the new file
@@ -276,10 +288,12 @@ def make_new_datapile(begin, end, new, reprocessed, new_path, old_path):
         The path to the new datapile directory used for this HSLA release.
     old_path : str
         The path to the old datapile directory used for the last HSLA release.
+    ins : str
+        The instrument to use for this datapile (COS or STIS).
 
     Outputs
     -------
-    update_summary.txt
+    update_summary_{COS/STIS}.txt
         A file that summarizes this new HSLA update. It includes a listing
         of all of the new/reprocessed datasets, their target names, and
         (for reprocessed files) the cal version and calibration files
@@ -289,7 +303,8 @@ def make_new_datapile(begin, end, new, reprocessed, new_path, old_path):
     """
 
     # Open up the update_summary.txt file to summarize this HSLA update.
-    outfile = open(os.path.join(new_path, 'update_summary.txt'), 'w')
+    outfile = open(os.path.join(new_path, 'update_summary_{}.txt'.format(ins)),
+                   'w')
     outfile.write('Update summary for HSLA version contained in %s.\n' 
                   % new_path)
     outfile.write('Date range used in the new/reprocessed file search for '
@@ -366,6 +381,12 @@ def make_new_datapile(begin, end, new, reprocessed, new_path, old_path):
                      'EXSTAB','RIPTAB','HALOTAB','TELTAB','SRWTAB','TDSTAB',
                      'TDCTAB','GACTAB','CAL_VER']
 
+    # Get relevant keywords based on instrument
+    if ins == 'COS':
+        keywords = keywords_cos
+    if ins == 'STIS':
+        keywords = keywords_stis
+
     # Get the public archive paths to the x1d's of reprocessed datasets/asns.
     # Copy over any reprocessed files and state the reason for the
     # reprocessing in the update_summary.txt file. Note: some files are both
@@ -399,15 +420,7 @@ def make_new_datapile(begin, end, new, reprocessed, new_path, old_path):
                     old = fits.getheader(match[0], 0)
                     new = fits.getheader(f, 0)
                     diff = 0  # to see if anything changed
-
-                    # Get relevant keywords based on instrument
-                    if os.path.basename(f).startswith('l'):
-                        keywords = keywords_cos
-                    elif os.path.basename(f).startswith('o'):
-                        keywords = keywords_stis
-                    else:
-                        print('Dataset doesnt appear to be COS or STIS.')
-
+                    
                     # Loop through the relevant keywords to see what changed
                     for k in keywords:
                         try:
@@ -457,9 +470,9 @@ def make_new_datapile(begin, end, new, reprocessed, new_path, old_path):
 
 # -----------------------------------------------------------------------------
 
-def new_file_query(begin, end):
+def new_file_query(begin, end, ins):
     """
-    Queries MAST for new and reprocessed COS and STIS files within a certain 
+    Queries MAST for new and reprocessed COS or STIS files within a certain 
     date range.
 
     Parameters
@@ -468,6 +481,8 @@ def new_file_query(begin, end):
         The date to start the search from (MM-DD-YYYY).
     end : str
         The date to end the search from (MM-DD-YYYY).
+    ins : str
+        The instrument to use for this datapile (COS or STIS).
 
     Returns
     -------
@@ -494,6 +509,18 @@ def new_file_query(begin, end):
                                 'Proposal ID':[]})
         print('No new COS files in this time range.')
 
+    # Query for all COS reprocessed files
+    url = 'https://archive.stsci.edu/hst/search.php?'
+    url += '&sci_instrume=COS&sci_obs_type=spectrum&sci_aec=%'
+    url += '&sci_archive_date={}..{}&sci_release_date=%3C{}'.format(begin, 
+           end, end)
+    url += '&max_records=50001&outputformat=CSV'
+    url += '&selectedColumnsCsv=sci_data_set_name,sci_targname&action=Search'
+    reprocessed_cos = pd.read_csv(url, skiprows=[1])
+    if len(reprocessed_cos)==0:
+        reprocessed_cos = pd.DataFrame({'Dataset':[], 'Target Name':[]})
+        print('No reprocessed COS files in this time range.')
+
     # Query for all new STIS files
     url = 'https://archive.stsci.edu/hst/search.php?'
     url += '&sci_instrume=STIS&sci_obs_type=spectrum&sci_aec=%'
@@ -508,18 +535,6 @@ def new_file_query(begin, end):
                                  'Proposal ID':[]})
         print('No new STIS files in this time range.')
 
-    # Query for all COS reprocessed files
-    url = 'https://archive.stsci.edu/hst/search.php?'
-    url += '&sci_instrume=COS&sci_obs_type=spectrum&sci_aec=%'
-    url += '&sci_archive_date={}..{}&sci_release_date=%3C{}'.format(begin, 
-           end, end)
-    url += '&max_records=50001&outputformat=CSV'
-    url += '&selectedColumnsCsv=sci_data_set_name,sci_targname&action=Search'
-    reprocessed_cos = pd.read_csv(url, skiprows=[1])
-    if len(reprocessed_cos)==0:
-        reprocessed_cos = pd.DataFrame({'Dataset':[], 'Target Name':[]})
-        print('No reprocessed COS files in this time range.')
-
     # Query for all STIS reprocessed files
     url = 'https://archive.stsci.edu/hst/search.php?'
     url += '&sci_instrume=STIS&sci_obs_type=spectrum&sci_aec=%'
@@ -533,14 +548,20 @@ def new_file_query(begin, end):
         reprocessed_stis = pd.DataFrame({'Dataset':[], 'Target Name':[]})
         print('No reprocessed STIS files in this time range.')
 
-    # Combine the COS and STIS results and get rid of bad targets
-    new = pd.concat([new_cos, new_stis], ignore_index=True)
+    # Choose to use COS or STIS results
+    if ins == 'COS':
+        new = new_cos
+        reprocessed = reprocessed_cos
+    if ins == 'STIS':
+        new = new_stis
+        reprocessed = reprocessed_stis
+
+    # Get rid of bad targets
     if len(new) != 0:
         new = new[((new['Target Name'] != 'ANY') & 
                    (new['Target Name'] != 'WAVE') & 
                    (new['Target Name'] != 'CCDFLAT'))].reset_index(drop=True)
-    reprocessed = pd.concat([reprocessed_cos, reprocessed_stis], 
-                            ignore_index=True)
+
     if len(reprocessed) != 0:
         reprocessed = reprocessed[((reprocessed['Target Name'] != 'ANY') & 
                                    (reprocessed['Target Name'] != 'WAVE') & 
@@ -574,6 +595,7 @@ def parse_args():
                     'this HSLA release.')
     old_dir_help = ('The name of the datapile directory for the previous '
                     'HSLA release.')
+    ins_help = 'The instrument to use for this datapile (COS or STIS).'
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--b', dest='begin', action='store', type=str, 
@@ -584,6 +606,8 @@ def parse_args():
                         required=True, help=new_dir_help)
     parser.add_argument('--o', dest='old_dir', action='store', type=str, 
                         required=True, help=old_dir_help)
+    parser.add_argument('--i', dest='ins', action='store', type=str, 
+                        required=True, help=ins_help)
     args = parser.parse_args()
 
     return args
@@ -591,7 +615,7 @@ def parse_args():
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 
-def hsla_setup(begin, end, new_dir, old_dir):
+def hsla_setup(begin, end, new_dir, old_dir, ins):
     """
     The main function of the hsla_setup module. See module docstring for
     further details.
@@ -608,37 +632,39 @@ def hsla_setup(begin, end, new_dir, old_dir):
     old_dir : str
         The name of the datapile directory for the previous HSLA release.
         Historically has been 'datapile'.
+    ins : str
+        The instrument to use for this datapile (COS or STIS).
     """
 
     # Make a new datapile directory for this version and change working
     # directoy to it (other scripts depend on being in this directory).
-    new_path = os.path.join(HSLA_DIR, new_dir)
+    new_path = os.path.join(HSLA_DIR, '{}_{}'.format(new_dir, ins))
     if not os.path.exists(new_path):
         os.mkdir(new_path)
     os.chdir(new_path)
 
-    # The path to the last HSLA release
-    old_path = os.path.join(HSLA_DIR, old_dir)
+    # The path to the last HSLA release for this instrument
+    old_path = os.path.join(HSLA_DIR, '{}_{}'.format(old_dir, ins))
 
     # Get a list of the new and reprocessed COS/STIS spectrograph datasets
     # (and new target names/prop IDs) that were observed within a certain 
     # time range.
-    new, reprocessed, new_targs, new_props = new_file_query(begin, end)
+    new, reprocessed, new_targs, new_props = new_file_query(begin, end, ins)
     print('{} new files.'.format(len(new)))
     print('{} reprocessed files.'.format(len(reprocessed)))
 
     # Make a table containing all failed COS/STIS visits. These visits will be
     # excluded in the co-adds.
-    ban_visits(new_props, new_path, old_path)
+    ban_visits(new_props, new_path, old_path, ins)
     print('Banned visits table created.')
 
     # Set up the new datapile directory
-    make_new_datapile(begin, end, new, reprocessed, new_path, old_path)
+    make_new_datapile(begin, end, new, reprocessed, new_path, old_path, ins)
     print('New datapile created.')
 
     # Make a full exposure catalog of every COS/STIS spectrograph observation
     # from launch to the given end date.
-    cat_name = make_full_catalog(end, new_path)
+    cat_name = make_full_catalog(end, new_path, ins)
     print('Full catalog created.')
 
     # Sort the datasets into target directories using the full catalog
@@ -650,7 +676,7 @@ def hsla_setup(begin, end, new_dir, old_dir):
     print('Full alias file created.')
 
     # Make an alias file containing only the new target names
-    make_new_alias(new_targs, new_path, old_path)
+    make_new_alias(new_targs, new_path, old_path, ins)
     print('New alias file created.')
 
 # -----------------------------------------------------------------------------
@@ -660,4 +686,4 @@ if __name__ == '__main__':
     
     args = parse_args()
 
-    hsla_setup(args.begin, args.end, args.new_dir, args.old_dir)
+    hsla_setup(args.begin, args.end, args.new_dir, args.old_dir, args.ins)
