@@ -20,9 +20,9 @@ Use
         python hsla_finish.py --n <datapile_v#> --o <datapile_v#>
 
     --n [Required]: The name to use for the new datapile directory for
-    this HSLA release.
+    this HSLA release (Example: datapile_04-23-2018_COS).
     --o [Required]: The name of the datapile directory for the previous
-    HSLA release.
+    HSLA release (Example: datapile_10-01-2017_COS).
 
     This script can also be run within python:
 
@@ -211,10 +211,10 @@ def hsla_finish(new_dir, old_dir, ins):
         The date to end the search from (MM-DD-YYYY).
     new_dir : str
         The name to use for the new datapile directory for this HSLA release.
-        Historically has been 'datapile_v#'.
+        Example: datapile_04-23-2018_COS.
     old_dir : str
         The name of the datapile directory for the previous HSLA release.
-        Historically has been 'datapile'.
+        Example: datapile_10-01-2017_COS.
     ins : str
         The instrument to use for this datapile (COS or STIS).
     """
@@ -223,11 +223,11 @@ def hsla_finish(new_dir, old_dir, ins):
 
     # Change directories to that containing the new HSLA version (other
     # scripts depend on being in this directory)
-    new_path = os.path.join(HSLA_DIR, '{}_{}'.format(new_dir, ins))
+    new_path = os.path.join(HSLA_DIR, new_dir)
     os.chdir(new_path)
 
     # The path to the last HSLA release
-    old_path = os.path.join(HSLA_DIR, '{}_{}'.format(old_dir, ins))
+    old_path = os.path.join(HSLA_DIR, old_dir)
 
     # Combine the old reference alias file with the alias file for new target
     # names contained in this release.

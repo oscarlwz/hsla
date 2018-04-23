@@ -5,10 +5,8 @@ Sets up a new HSLA version release in a new datapile directory that
 includes older datasets from previous releases as well as datasets
 that are new/reprocessed since this latest release. An updated alias 
 file is also generated for the new targets. This should be manually
-inspected, and the correct alias chosen before running hsla_finish.py.
-
-The following outputs are created:
-1. 
+inspected, and the correct alias chosen before running the remaining
+HSLA generation steps.
 
 Authors
 -------
@@ -25,9 +23,9 @@ Use
     --e [Required]: The date at which to end the new/reprocessed 
     file search from.
     --n [Required]: The name to use for the new datapile directory for
-    this HSLA release.
+    this HSLA release (Example: datapile_04-23-2018_COS).
     --o [Required]: The name of the datapile directory for the previous
-    HSLA release.
+    HSLA release (Example: datapile_10-01-2017_COS).
     --i [Required]: The instrument to use for this datapile (COS or STIS)
 
     This script can also be run within python:
@@ -68,8 +66,10 @@ import argparse
 from astropy.io import ascii
 from astropy.io import fits
 from astropy.table import Table, vstack
+import bs4
 import datetime as dt
 import fitsio
+import html5lib
 import lxml
 import numpy as np
 import pandas as pd
@@ -188,7 +188,7 @@ def make_full_catalog(end, new_path, ins):
     # given end date.
     url = 'https://archive.stsci.edu/hst/search.php?'
     url += '&sci_instrume=STIS&sci_obs_type=spectrum&sci_aec=%' #for cal+sci
-    url += '&sci_aper_1234=0.2X0.2,0.2x0.2FP*&sci_spec_1234=E230M,E140M'
+    url += '&sci_aper_1234=0.2X0.2,0.2X0.2FP*&sci_spec_1234=E230M,E140M'
     url += '&sci_release_date=%3C{}'.format(end)
     url += '&max_records=50001&outputformat=CSV&coordformat=dec'
     url += '&selectedColumnsCsv=sci_data_set_name,sci_targname,sci_ra,sci_dec,'
@@ -457,7 +457,7 @@ def make_new_datapile(begin, end, new, reprocessed, new_path, old_path, ins):
 
     # Copy over all of the remaining files from the previous HSLA release.
     old_files = glob.glob(os.path.join(old_path, '*/*x1d.fits'))
-    for i,f in enumerate(old_files):
+    for i,f in enumerate(old_files[0:10]): # CHANGED TO ONLY 10 FOR TESTING!
         if not os.path.exists(os.path.join(new_path, os.path.basename(f))):
             shutil.copy(f, new_path)
 
@@ -525,7 +525,7 @@ def new_file_query(begin, end, ins):
     url = 'https://archive.stsci.edu/hst/search.php?'
     url += '&sci_instrume=STIS&sci_obs_type=spectrum&sci_aec=%'
     url += '&sci_release_date={}..{}'.format(begin, end)
-    url += '&sci_aper_1234=0.2X0.2,0.2x0.2FP*&sci_spec_1234=E230M,E140M'
+    url += '&sci_aper_1234=0.2X0.2,0.2X0.2FP*&sci_spec_1234=E230M,E140M'
     url += '&max_records=50001&outputformat=CSV'
     url += '&selectedColumnsCsv=sci_data_set_name,sci_targname,sci_pep_id'
     url += '&action=Search'
@@ -540,7 +540,7 @@ def new_file_query(begin, end, ins):
     url += '&sci_instrume=STIS&sci_obs_type=spectrum&sci_aec=%'
     url += '&sci_archive_date={}..{}&sci_release_date=%3C{}'.format(begin, 
            end, end)
-    url += '&sci_aper_1234=0.2X0.2,0.2x0.2FP*&sci_spec_1234=E230M,E140M'
+    url += '&sci_aper_1234=0.2X0.2,0.2X0.2FP*&sci_spec_1234=E230M,E140M'
     url += '&max_records=50001&outputformat=CSV'
     url += '&selectedColumnsCsv=sci_data_set_name,sci_targname&action=Search'
     reprocessed_stis = pd.read_csv(url, skiprows=[1])
@@ -628,23 +628,23 @@ def hsla_setup(begin, end, new_dir, old_dir, ins):
         The date to end the search from (MM-DD-YYYY).
     new_dir : str
         The name to use for the new datapile directory for this HSLA release.
-        Historically has been 'datapile_v#'.
+        Example: datapile_04-23-2018_COS.
     old_dir : str
         The name of the datapile directory for the previous HSLA release.
-        Historically has been 'datapile'.
+        Example: datapile_10-01-2017_COS.
     ins : str
         The instrument to use for this datapile (COS or STIS).
     """
 
     # Make a new datapile directory for this version and change working
     # directoy to it (other scripts depend on being in this directory).
-    new_path = os.path.join(HSLA_DIR, '{}_{}'.format(new_dir, ins))
+    new_path = os.path.join(HSLA_DIR, new_dir)
     if not os.path.exists(new_path):
         os.mkdir(new_path)
     os.chdir(new_path)
 
     # The path to the last HSLA release for this instrument
-    old_path = os.path.join(HSLA_DIR, '{}_{}'.format(old_dir, ins))
+    old_path = os.path.join(HSLA_DIR, old_dir)
 
     # Get a list of the new and reprocessed COS/STIS spectrograph datasets
     # (and new target names/prop IDs) that were observed within a certain 

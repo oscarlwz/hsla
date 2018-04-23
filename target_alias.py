@@ -11,20 +11,21 @@ import copy
 def target_alias(catalog): 
 
     t = ascii.read(catalog) 
-    if ('Status' in t.keys()) : del t['Status'] 
-    if ('Dataset' in t.keys()) : del t['Dataset'] 
-    if ('Apertures' in t.keys()) : del t['Apertures'] 
+    if ('Status' in t.keys()) : del t['Status']
+    if ('Dataset' in t.keys()) : del t['Dataset']
+    if ('Apertures' in t.keys()) : del t['Apertures']
+    if ('Start Time' in t.keys()) : del t['Start Time']
 
     rasort = t.argsort(keys='RA (J2000)') 
     hold = t[rasort] 
     unique_targs = tabunique(hold, keys='Target Name')
 
     targets = unique_targs
-    targets.write('unique_target_names.html', format='jsviewer') 
-    targets.write('unique_target_names.list', format='ascii') 
+    targets.write('unique_target_names.html', format='jsviewer')
+    targets.write('unique_target_names.list', format='ascii')
 
-    if ('Target Descrip' in targets.keys()) : del targets['Target Descrip'] 
-    if ('Broad Category' in targets.keys()) : del targets['Broad Category'] 
+    if ('Target Descrip' in targets.keys()) : del targets['Target Descrip']
+    if ('Broad Category' in targets.keys()) : del targets['Broad Category']
 
     aliases = targets
     aliases['alias0'] = '          . . .                   ' 
