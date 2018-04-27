@@ -35,11 +35,12 @@ def parse_args():
 def drive_targets(targets):
     clobber = targets[1]
     canonical = ascii.read(targets[0]+'.list')
-    print canonical
+    #JRD python3
+    print(canonical)
     dirlist = canonical['targname'][np.where(canonical['flag'] == 1)]
-    print "dirlist in driver"
-    print dirlist
-    print 'clobber ', clobber
+    print("dirlist in driver")
+    print(dirlist)
+    print('clobber ', clobber)
     dirc = []
     for d in dirlist:
         dirc.append((d,clobber))
@@ -52,15 +53,18 @@ def drive_targets(targets):
 def drive_dirlist(dirc):
     dirname = dirc[0]
     clobber = dirc[1]
-    print "Driving target:  ", dirname, "with clobber = ",clobber
+    #JRD
+    print("Driving target:  ", dirname, "with clobber = ",clobber)
     if os.path.isdir(dirname):
         os.chdir(dirname)
 
-        if os.path.isfile('DONE_'+dirname): 
-            print 'found a DONE file for ', dirname, ' so will skip it' 
+        if os.path.isfile('DONE_'+dirname):
+            #JRD
+            print('found a DONE file for ', dirname, ' so will skip it')
         if not os.path.isfile('DONE_'+dirname): 
- 
-            print 'did not file a DONE file for ', dirname 
+
+            #JRD
+            print('did not file a DONE file for ', dirname)
 
             os.system('touch WORKING_'+dirname)
             os.system('rm DONE_'+dirname)
@@ -73,36 +77,51 @@ def drive_dirlist(dirc):
                 #    os.system('/Applications/exelis/idl82/bin/idl -e "@../../code/coadd_script.pro"')
     
             if clobber != 1 and (os.path.exists(dirname+'_coadd_G130M_final_all.fits.gz') or os.path.exists(dirname+'_coadd_G140L_final_all.fits.gz')):
-                print dirname+ ":  JT Coadd already exists, skipping  "
+                #JRD
+                print(dirname+ ":  JT Coadd already exists, skipping  ")
             else:
-                print dirname+ ":  Running add"
+                #JRD
+                print(dirname+ ":  Running add")
                 coadd = add.main('FUVM', '1')
                 coadd = add.main('FUVM', '2')
                 coadd = add.main('FUVM', '3')
+                coadd = add.main('FUVM', '4')
+                coadd = add.main("FUVM", "ALL")
                 coadd = add.main('FUVM', '12')
                 coadd = add.main('FUVL', '1')
                 coadd = add.main('FUVL', '2')
                 coadd = add.main('FUVL', '3')
+                coadd = add.main('FUVL', '4')
                 coadd = add.main('FUVL', '12')
+                coadd = add.main("FUVL", "ALL")
+                #JRD adding NUV
+                coadd = add.main("NUVM", '1')
+                coadd = add.main("NUVL", '1')
     
             if clobber != 1 and os.path.exists(dirname+'_quicklook.html'):
-                print dirname+ ":  Quicklook already exists, skipping  "
+                #JRD
+                print(dirname+ ":  Quicklook already exists, skipping  ")
             else:
-                print dirname+":  Creating Quick Look for ", dirname
+                print(dirname+":  Creating Quick Look for ", dirname)
+                #JRD skipping quicklook for now, CHANGE LATER
                 quick_look.get_quick_look()
         
-            tarstring = 'tar -cvf '+dirname+'_target.tar *png *fits.gz *txt *html' 
-            print tarstring 
+            tarstring = 'tar -cvf '+dirname+'_target.tar *png *fits.gz *txt *html'
+            #JRD
+            print(tarstring)
             os.system(tarstring) 
-            gzipstring = 'gzip -f *_target*tar' 
-            print gzipstring 
+            gzipstring = 'gzip -f *_target*tar'
+            #JRD
+            print(gzipstring)
             os.system(gzipstring) 
     
             if clobber != 1 and os.path.exists(dirname+'_quicklook.html'):
-                print dirname+ ":  Quicklook already exists, skipping  "
+                #JRD
+                print(dirname+ ":  Quicklook already exists, skipping  ")
             else:
-                print dirname+":  Creating Quick Look for ", dirname
-                quick_look.get_quick_look()
+                print(dirname+":  Creating Quick Look for ", dirname)
+                #JRD SKIPPING QUICKLOOK FOR NOW, CHANGE LATAER
+                #quick_look.get_quick_look()
     
     
             os.system('touch DONE_'+dirname)
