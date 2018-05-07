@@ -5,7 +5,6 @@
 import os
 from astropy.io import ascii 
 from astropy.table import Table
-#
 
 def defeat_aliases(aliasfile): 
 

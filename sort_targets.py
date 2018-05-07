@@ -13,7 +13,6 @@ from astropy.io import fits
 from astropy.table import Table 
 import glob
 import argparse
-#
 
 def sort_targets(catalog): 
 

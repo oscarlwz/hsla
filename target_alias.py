@@ -6,7 +6,6 @@ from astropy.coordinates import SkyCoord
 import astropy.units as u
 import numpy as np
 import copy 
-#
 
 def target_alias(catalog): 
 
