@@ -42,18 +42,17 @@ def target_alias(catalog):
 
     c = SkyCoord(ra=targets['RA (J2000)']*u.degree, dec=targets['Dec (J2000)']*u.degree)
 
-    for index in np.arange(np.size(targets['RA (J2000)'])): 
-        sep = c.separation(c[index]) 
-        i_where = np.where(sep.arcsecond <= 3) 
+    for index in np.arange(np.size(targets['RA (J2000)'])):
+        sep = c.separation(c[index])
+        i_where = np.where(sep.arcsecond <= 3)
         unique_by_name = tabunique(targets[:][i_where], keys='Target Name')
-        print 
-        print index, targets['Target Name'][index]  
-        print unique_by_name['Target Name'] 
+        print(index, targets['Target Name'][index])
+        print(unique_by_name['Target Name'])
         aliases['alias0'][index] = unique_by_name['Target Name'][0] 
 
         #print index, targets['Target Name'][index], targets['Target Name'][i_where] 
         unique_by_name = tabunique(targets[:][i_where], keys='Target Name')
-        print index, targets['Target Name'][index],unique_by_name['Target Name'] 
+        print(index, targets['Target Name'][index], unique_by_name['Target Name'])
         aliases['alias0'][index] = unique_by_name['Target Name'][0] 
         if (np.size(unique_by_name['Target Name']) > 1): aliases['alias1'][index] = unique_by_name['Target Name'][1] 
         if (np.size(unique_by_name['Target Name']) > 2): aliases['alias2'][index] = unique_by_name['Target Name'][2] 
@@ -76,4 +75,4 @@ def target_alias(catalog):
     del aliases['RA (J2000)', 'Dec (J2000)', 'alias6', 'alias7', 'alias8', 'alias9', 'alias10'] 
     aliases.write(catalog[0:-4]+'.alias', format='ascii.fixed_width_two_line') 
 
-    return aliases 
+    return(aliases)

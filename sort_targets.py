@@ -9,9 +9,8 @@
 import os
 import sys 
 from astropy.io import ascii 
+from astropy.io import fits
 from astropy.table import Table 
-import fitsio
-# from fitsio import FITS,FITSHDR
 import glob
 import argparse
 
@@ -33,12 +32,12 @@ def sort_targets(catalog):
     filelist = glob.glob(os.path.join('.', '*x1d.fits'))
 
     for thisfile in filelist: 
-        h = fitsio.read_header(thisfile, 0)
-        print thisfile, str(h['TARGNAME']) 
-        move = 'mv '+thisfile+'  ./'+ str(h['TARGNAME']) 
-        print move 
-        ret = os.system(move) 
-        print ret 
+        targ = fits.getheader(thisfile, 0)['TARGNAME']
+        print(thisfile, targ) 
+        move = 'mv '+thisfile+'  ./'+ targ
+        print(move)
+        ret = os.system(move)
+        print(ret)
        
     return "targets sorted!"
 

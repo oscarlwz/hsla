@@ -21,10 +21,10 @@ def defeat_aliases(aliasfile):
     for original_targname in aliases['Target Name']:
 
         if aliases['alias0'][i] == original_targname:  
-            print "The target name and alias are identical, so I'll do nothing!" 
+            print("The target name and alias are identical, so I'll do nothing!") 
         else: 
             move_command = 'mv ./'+original_targname+'/*.fits '+'  ./'+aliases['alias0'][i] 
-            print move_command 
+            print(move_command)
             os.system(move_command) 
 
         i += 1 
