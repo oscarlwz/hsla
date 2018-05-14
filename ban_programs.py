@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 from astropy.io import ascii
+import glob
 import numpy as np
 import os
 
@@ -13,7 +14,6 @@ def ban_programs(targets):
     for n,dirname in enumerate(dirlist):
         print("Banning Programs for Target: ", dirname)
         if os.path.isdir(dirname):
-
             os.chdir(dirname)
  
             if os.path.exists("all_exposures.txt"):
