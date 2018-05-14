@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 from astropy.io import ascii
-import glob
 import numpy as np
 import os
 
@@ -14,12 +13,13 @@ def ban_programs(targets):
     for n,dirname in enumerate(dirlist):
         print("Banning Programs for Target: ", dirname)
         if os.path.isdir(dirname):
-            os.chdir(dirname)
 
+            os.chdir(dirname)
+ 
             if os.path.exists("all_exposures.txt"):
                 exposure_cat = ascii.read("all_exposures.txt")
                 print("read exposures for ", dirname)
-
+                
                 # Ban bad proposals
                 for pid_to_ban in banned_programs_list['pid']:
                     mask = np.where(exposure_cat['PropID'] == pid_to_ban)
@@ -39,3 +39,4 @@ def ban_programs(targets):
 
         if n%100==0:
             print('{}/{} targets completed.'.format(n, len(dirlist)))
+            
