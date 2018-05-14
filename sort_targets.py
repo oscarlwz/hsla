@@ -9,14 +9,10 @@
 import os
 import sys 
 from astropy.io import ascii 
-from astropy.table import Table 
-#JRD: REplacing fitsio by astropy.fits
-#import fitsio
 from astropy.io import fits
-# from fitsio import FITS,FITSHDR
+from astropy.table import Table 
 import glob
 import argparse
-
 
 def sort_targets(catalog): 
 
@@ -33,18 +29,15 @@ def sort_targets(catalog):
             print('SORT_TARGETS: created directory for target: ', target)
 
     #### now get list of all x1d files in this directory and move them to the appropriate directories 
-    filelist = glob.glob(os.path.join('.', '*x1d.fits.gz'))
+    filelist = glob.glob(os.path.join('.', '*x1d.fits'))
 
-    for thisfile in filelist:
-        #JRD: Now using astropy instead of fitsio
-        #h = fitsio.read_header(thisfile, 0)
-        data = fits.open(thisfile)
-        h = data[0].header
-        print(thisfile, str(h['TARGNAME']) )
-        move = 'mv '+thisfile+'  ./'+ str(h['TARGNAME']) 
-        print( move) 
-        ret = os.system(move) 
-        print( ret )
+    for thisfile in filelist: 
+        targ = fits.getheader(thisfile, 0)['TARGNAME']
+        print(thisfile, targ) 
+        move = 'mv '+thisfile+'  ./'+ targ
+        print(move)
+        ret = os.system(move)
+        print(ret)
        
     return "targets sorted!"
 

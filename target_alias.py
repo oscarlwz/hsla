@@ -7,13 +7,13 @@ import astropy.units as u
 import numpy as np
 import copy 
 
-
 def target_alias(catalog): 
 
     t = ascii.read(catalog) 
     if ('Status' in t.keys()) : del t['Status'] 
     if ('Dataset' in t.keys()) : del t['Dataset'] 
-    if ('Apertures' in t.keys()) : del t['Apertures'] 
+    if ('Apertures' in t.keys()) : del t['Apertures']
+    if ('Start Time' in t.keys()) : del t['Start Time']
     
     rasort = t.argsort(keys='RA (J2000)') 
     hold = t[rasort] 
@@ -45,17 +45,13 @@ def target_alias(catalog):
         sep = c.separation(c[index])
         i_where = np.where(sep.arcsecond <= 3)
         unique_by_name = tabunique(targets[:][i_where], keys='Target Name')
-
-        #JRD python 3
-        #print()
-        #print(index, targets['Target Name'][index])
-        #print(unique_by_name['Target Name'])
+        print(index, targets['Target Name'][index])
+        print(unique_by_name['Target Name'])
         aliases['alias0'][index] = unique_by_name['Target Name'][0] 
         
         #print index, targets['Target Name'][index], targets['Target Name'][i_where] 
         unique_by_name = tabunique(targets[:][i_where], keys='Target Name')
-        print(index, targets['Target Name'][index],unique_by_name['Target Name'])
-        
+        print(index, targets['Target Name'][index], unique_by_name['Target Name'])
         aliases['alias0'][index] = unique_by_name['Target Name'][0] 
         if (np.size(unique_by_name['Target Name']) > 1): aliases['alias1'][index] = unique_by_name['Target Name'][1] 
         if (np.size(unique_by_name['Target Name']) > 2): aliases['alias2'][index] = unique_by_name['Target Name'][2] 

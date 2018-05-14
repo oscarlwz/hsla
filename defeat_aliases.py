@@ -4,7 +4,7 @@
 
 import os
 from astropy.io import ascii 
-from astropy.table import Table 
+from astropy.table import Table
 
 def defeat_aliases(aliasfile): 
 
@@ -21,11 +21,10 @@ def defeat_aliases(aliasfile):
     for original_targname in aliases['Target Name']:
 
         if aliases['alias0'][i] == original_targname:  
-            print("The target name and alias are identical, so I'll do nothing!")
+            print("The target name and alias are identical, so I'll do nothing!") 
         else: 
-            move_command = 'mv ./'+original_targname+'/*.fits.gz '+'  ./'+aliases['alias0'][i] 
+            move_command = 'mv ./'+original_targname+'/*.fits '+'  ./'+aliases['alias0'][i]
             print(move_command)
-            os.system(move_command) 
+            os.system(move_command)
 
-        i += 1 
-
+        i += 1
