@@ -14,6 +14,7 @@ def target_alias(catalog):
     if ('Dataset' in t.keys()) : del t['Dataset'] 
     if ('Apertures' in t.keys()) : del t['Apertures']
     if ('Start Time' in t.keys()) : del t['Start Time']
+    if ('Archive Class' in t.keys()) : del t['Archive Class']
     
     rasort = t.argsort(keys='RA (J2000)') 
     hold = t[rasort] 

@@ -172,7 +172,8 @@ def make_full_catalog(end, new_path, ins):
     url += '&selectedColumnsCsv=sci_data_set_name,sci_targname,sci_ra,sci_dec,'
     url += 'sci_expflag,sci_actual_duration,sci_instrume,sci_aper_1234,'
     url += 'sci_spec_1234,sci_central_wavelength,sci_pep_id,sci_status,'
-    url += 'sci_target_descrip,sci_broad_category,sci_start_time&action=Search'
+    url += 'sci_target_descrip,sci_broad_category,sci_start_time,'
+    url += 'sci_archive_class&action=Search'
     print('Ignore the following 4 skipping line warnings. These will be added '
           'below. If there are more than 4, need to fix.')
     df_cos = pd.read_csv(url, error_bad_lines=False, skiprows=[1]) # skip dtype row
@@ -194,7 +195,8 @@ def make_full_catalog(end, new_path, ins):
     url += '&selectedColumnsCsv=sci_data_set_name,sci_targname,sci_ra,sci_dec,'
     url += 'sci_expflag,sci_actual_duration,sci_instrume,sci_aper_1234,'
     url += 'sci_spec_1234,sci_central_wavelength,sci_pep_id,sci_status,'
-    url += 'sci_target_descrip,sci_broad_category,sci_start_time&action=Search'
+    url += 'sci_target_descrip,sci_broad_category,sci_start_time,'
+    url += 'sci_archive_class&action=Search'
     df_stis = pd.read_csv(url, error_bad_lines=False, skiprows=[1]) # skip dtype row
 
     # Write out the catalog of interest
