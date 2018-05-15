@@ -459,7 +459,7 @@ def make_new_datapile(begin, end, new, reprocessed, new_path, old_path, ins):
 
     # Copy over all of the remaining files from the previous HSLA release.
     old_files = glob.glob(os.path.join(old_path, '*/*x1d.fits'))
-    for i,f in enumerate(old_files[0:10]): # CHANGED TO ONLY 10 FOR TESTING!
+    for i,f in enumerate(old_files):
         if not os.path.exists(os.path.join(new_path, os.path.basename(f))):
             shutil.copy(f, new_path)
 
