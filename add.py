@@ -322,7 +322,7 @@ def main(screen, lifetime, Linda=False):
 
 
 
-def splice_fuv(out_dict, key_to_combine): 
+def splice_fuv_old(out_dict, key_to_combine): 
 
     g130m = out_dict['G130M_final_'+key_to_combine] 
     g160m = out_dict['G160M_final_'+key_to_combine] 
@@ -346,7 +346,46 @@ def splice_fuv(out_dict, key_to_combine):
     else:
         #JRD
         print('Problem with splitwave, nothing will be done')
-       
+
+
+
+def splice_fuv(out_dict, key_to_combine):
+
+    f130 = False
+    f160 = False
+
+    lambda_max = 0.
+    spec = None
+    
+    if (out_dict.__contains__('G130M_final_' + key_to_combine)):
+        g130m = out_dict['G130M_final_' + key_to_combine]
+        f130 = True
+        i130_max = np.max(np.where(g130m['FLUXWGT']>0.))
+        spec = g130m[0:i130_max]
+        lambda_max = g130m['WAVE'][i130_max]
+    if (out_dict.__contains__('G160M_final_' + key_to_combine)):
+        g160m = out_dict['G160M_final_' + key_to_combine]
+        print("CHECK ")
+        print(g160m)
+        f160=True
+        i160_min = np.min(np.where(g160m['FLUXWGT']>0.))
+        lmin = g160m['WAVE'][i160_min]
+        i160_max = np.max(np.where(g160m['FLUXWGT']> 0.))
+        lmax = g160m['WAVE'][i160_max]
+        if f160==True:
+            if lmin > lambda_max:
+                spec = vstack([spec, g160m[i160_min:i160_max]])
+            else:
+                good160 = np.where((g160m['WAVE'] > lambda_max) & (g160m['FLUXWGT'] > 0))
+                i160_min = np.min(good160)
+                spec = vstack([spec, g160m[i160_min:i160_max]])
+        else:
+            spec = g160m[0:i160_max]
+        lambda_max = lmax
+
+        
+    if spec !=None:
+        out_dict['FUVM_final_' + key_to_combine] = spec
 
 def splice_nuv(out_dict):
 
