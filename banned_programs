@@ -45,3 +45,7 @@
 15370, COS FUV Gain Map at LP3/LP4
 15386, Cycle 25 COS FUV Target Acquisition Monitor
 15389, Cycle 25 COS NUV Target Acquisition Monitor
+15451, focus sweep for cenwave 800
+14935, spectral resolution of 1223
+15452, focus sweep for 1533
+15367, COS FUV profile for 1223
