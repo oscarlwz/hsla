@@ -129,7 +129,7 @@ def combine_alias(new_path, old_path):
 
 # -----------------------------------------------------------------------------
 
-def make_target_list(new_path):
+def make_target_list(new_path, ins):
     """
     Makes a master target list containing all of the target names with x1ds.
 
@@ -142,7 +142,7 @@ def make_target_list(new_path):
 
     Outputs
     -------
-    all_targets.list
+    all_targets_{COS/STIS}.list
         The master target list.
     """
 
