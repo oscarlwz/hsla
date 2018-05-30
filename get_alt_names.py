@@ -10,12 +10,14 @@ import targetname_munge as tname
 def get_alt_names(catalog, database, outfile): 
 
     targets = ascii.read(catalog) 
-    if ('Ref' in targets.keys()) : del t['Ref']
-    if ('Start Time' in targets.keys()) : del t['Start Time']
-    if ('Stop Time' in targets.keys()) : del t['Stop Time']
-    if ('Release Date' in targets.keys()) : del t['Release Date']
-    if ('Preview Name' in targets.keys()) : del t['Preview Name']
-    if ('High-Level Science Products' in targets.keys()) : del t['High-Level Science Products']
+    if ('Ref' in targets.keys()) : del targets['Ref']
+    if ('Archive Class' in targets.keys()) : del targets['Archive Class']
+    if ('Exp Flag' in targets.keys()) : del targets['Exp Flag']
+    if ('Start Time' in targets.keys()) : del targets['Start Time']
+    if ('Stop Time' in targets.keys()) : del targets['Stop Time']
+    if ('Release Date' in targets.keys()) : del targets['Release Date']
+    if ('Preview Name' in targets.keys()) : del targets['Preview Name']
+    if ('High-Level Science Products' in targets.keys()) : del targets['High-Level Science Products']
     del targets['Exp Time','Apertures'] 
 
     unique_targets = tabunique(targets, keys='Target Name') # now try to cull out those with no aliases 
@@ -27,8 +29,8 @@ def get_alt_names(catalog, database, outfile):
     unique_targets['AltNameLink'] = ' ' * 500    #### 500 spaces -  this will contain the alternate name as a link to the external database page, scrape_headers will use it 
 
     for i in np.arange(np.size(unique_targets['RA (J2000)'])): 
-	ra = unique_targets['RA (J2000)'][i] 
-	dec = unique_targets['Dec (J2000)'][i] 
+        ra = unique_targets['RA (J2000)'][i] 
+        dec = unique_targets['Dec (J2000)'][i] 
 
         if database == 'NED':
 
@@ -44,90 +46,92 @@ def get_alt_names(catalog, database, outfile):
             command3 = 'd&corr_z=1&z_constraint=Unconstrained&z_value1=&z_value2=&z_unit=z&ot_include=ANY&nmp_op=ANY&out_csys=Equatorial&out_equinox=J2000.0&obj_sort=Distance+to+search+center&of=xml_main&radius=1&zv_breaker=30000.0&list_limit=5&img_stamp=YES&search_type=Near+Position+Search"' 
             command = command1 + str(ra) + command2 + str(dec) + command3 
             print 'Searching NED for target: ', unique_targets['Target Name'][i], ra, dec 
-	    print command 
-            os.system(command) 
-            votable = parse_single_table("altnames.xml", pedantic=False)
-	    if (np.size(votable.fields) > 2):
-                table = votable.to_table() 
+            print command 
+            os.system(command)
+            try:
+                votable = parse_single_table("altnames.xml", pedantic=False)
+                if (np.size(votable.fields) > 2):
+                    table = votable.to_table() 
 
-                i_close = np.where((table['main_col10'] < 0.05) & (table['main_col5'] != 'AbLS') & (table['main_col5'] != 'UvS')) 
+                    i_close = np.where((table['main_col10'] < 0.05) & (table['main_col5'] != 'AbLS') & (table['main_col5'] != 'UvS')) 
 
-                if (np.size(i_close) > 0): 
-                    canonical_name = table['main_col2'][i_close[0]] 
-                    ned_class = table['main_col5'][i_close[0]]
-                    redshift = table['main_col7'][i_close[0]] 
- 	            angsep = table['main_col10'][i_close[0]] 
+                    if (np.size(i_close) > 0): 
+                        canonical_name = table['main_col2'][i_close[0]] 
+                        ned_class = table['main_col5'][i_close[0]]
+                        redshift = table['main_col7'][i_close[0]] 
+                        angsep = table['main_col10'][i_close[0]] 
 
-                    unique_targets['AltName'][i] = canonical_name[0] 
-                    unique_targets['AltNameRedshift'][i] = redshift[0] 
-                    unique_targets['AltNameClass'][i] = ned_class[0] 
+                        unique_targets['AltName'][i] = canonical_name[0] 
+                        unique_targets['AltNameRedshift'][i] = redshift[0] 
+                        unique_targets['AltNameClass'][i] = ned_class[0] 
 
-                    unique_targets['AltNameAngsep'][i] = angsep[0] 
-                    unique_targets['AltNameSource'][i] = 'NED' 
-                    unique_targets['AltNameLink'][i] = '<a href="http://ned.ipac.caltech.edu/cgi-bin/objsearch?in_csys=Equatorial&in_equinox=J2000.0&lon='+str(ra)[0:8]+'d&lat='+str(dec)[0:8]+'d&radius=2.0&hconst=73&omegam=0.27&omegav=0.73&corr_z=1&search_type=Near+Position+Search&z_constraint=Unconstrained&z_value1=&z_value2=&z_unit=z&ot_include=ANY&nmp_op=ANY&out_csys=Equatorial&out_equinox=J2000.0&obj_sort=Distance+to+search+center&of=pre_text&zv_breaker=30000.0&list_limit=5&img_stamp=YES">'+unique_targets['AltName'][i]+'</a>' 
-                    found_a_name = True 
-
-                print 
-                print 
-
-# can I find a better object labeled QSO, but with a redshift? 
-                if ('QSO' in table[i_close]['main_col5']): 
-                    print 'I found a QSO that meets the match criterion!' 
-                    q = table[i_close]  
-                    qso_i_found = q[q['main_col5'] == 'QSO'] 
-
-                    print 'Closest object redshift:  ' , table['main_col7'][i_close[0]][0], unique_targets['AltNameRedshift'][i]
-                    print 'Found QSO redshift: ' , qso_i_found['main_col7'][0] 
-                    if ('0.0' in unique_targets['AltNameRedshift'][i]): 
-                        print 'I would rather switch the match to this QSO here:'  
-                        print qso_i_found 
-
-                        canonical_name = qso_i_found['main_col2'][0] 
-                        ned_class = qso_i_found['main_col5'][0]
-                        redshift = qso_i_found['main_col7'][0] 
-                        angsep = qso_i_found['main_col10'][0]  
-       
-                        print redshift 
-    
-                        unique_targets['AltName'][i] = canonical_name
-                        unique_targets['AltNameRedshift'][i] = redshift
-                        unique_targets['AltNameClass'][i] = ned_class
-    
-                        unique_targets['AltNameAngsep'][i] = angsep
-                        unique_targets['AltNameSource'][i] = 'NED' 
-                        unique_targets['AltNameLink'][i] = '<a href="http://ned.ipac.caltech.edu/cgi-bin/objsearch?in_csys=Equatorial&in_equinox=J2000.0&lon='+str(ra)[0:8]+'d&lat='+str(dec)[0:8]+'d&radius=2.0&hconst=73&omegam=0.27&omegav=0.73&corr_z=1&search_type=Near+Position+Search&z_constraint=Unconstrained&z_value1=&z_value2=&z_unit=z&ot_include=ANY&nmp_op=ANY&out_csys=Equatorial&out_equinox=J2000.0&obj_sort=Distance+to+search+center&of=pre_text&zv_breaker=30000.0&list_limit=5&img_stamp=YES">'+unique_targets['AltName'][i]+'</a>' 
-                        found_a_name = True 
-         
-                    
-                if ('G' in table[i_close]['main_col5']):
-                    print 'I found a G that meets the match criterion!' 
-                    g = table[i_close]  
-                    g_i_found = g[g['main_col5'] == 'G'] 
-                    print g_i_found.sort('main_col7')
-                    
-
-                    print 'Closest object redshift:  ' , table['main_col7'][i_close[0]][0], unique_targets['AltNameRedshift'][i]
-                    print 'Found G redshift: ' , g_i_found['main_col7'][0] 
-                    if ('0.0' in unique_targets['AltNameRedshift'][i]): 
-                        print 'I would rather switch the match to this G here:'  
-
-                        canonical_name = g_i_found['main_col2'][0] 
-                        ned_class = g_i_found['main_col5'][0]
-                        redshift = g_i_found['main_col7'][0] 
- 	                angsep = g_i_found['main_col10'][0]  
-       
-                        print redshift 
-
-                        unique_targets['AltName'][i] = canonical_name
-                        unique_targets['AltNameRedshift'][i] = redshift
-                        unique_targets['AltNameClass'][i] = ned_class
-
-                        unique_targets['AltNameAngsep'][i] = angsep
+                        unique_targets['AltNameAngsep'][i] = angsep[0] 
                         unique_targets['AltNameSource'][i] = 'NED' 
                         unique_targets['AltNameLink'][i] = '<a href="http://ned.ipac.caltech.edu/cgi-bin/objsearch?in_csys=Equatorial&in_equinox=J2000.0&lon='+str(ra)[0:8]+'d&lat='+str(dec)[0:8]+'d&radius=2.0&hconst=73&omegam=0.27&omegav=0.73&corr_z=1&search_type=Near+Position+Search&z_constraint=Unconstrained&z_value1=&z_value2=&z_unit=z&ot_include=ANY&nmp_op=ANY&out_csys=Equatorial&out_equinox=J2000.0&obj_sort=Distance+to+search+center&of=pre_text&zv_breaker=30000.0&list_limit=5&img_stamp=YES">'+unique_targets['AltName'][i]+'</a>' 
                         found_a_name = True 
 
-      
+                    print 
+                    print 
+
+    # can I find a better object labeled QSO, but with a redshift? 
+                    if ('QSO' in table[i_close]['main_col5']): 
+                        print 'I found a QSO that meets the match criterion!' 
+                        q = table[i_close]  
+                        qso_i_found = q[q['main_col5'] == 'QSO'] 
+
+                        print 'Closest object redshift:  ' , table['main_col7'][i_close[0]][0], unique_targets['AltNameRedshift'][i]
+                        print 'Found QSO redshift: ' , qso_i_found['main_col7'][0] 
+                        if ('0.0' in unique_targets['AltNameRedshift'][i]): 
+                            print 'I would rather switch the match to this QSO here:'  
+                            print qso_i_found 
+
+                            canonical_name = qso_i_found['main_col2'][0] 
+                            ned_class = qso_i_found['main_col5'][0]
+                            redshift = qso_i_found['main_col7'][0] 
+                            angsep = qso_i_found['main_col10'][0]  
+           
+                            print redshift 
+        
+                            unique_targets['AltName'][i] = canonical_name
+                            unique_targets['AltNameRedshift'][i] = redshift
+                            unique_targets['AltNameClass'][i] = ned_class
+        
+                            unique_targets['AltNameAngsep'][i] = angsep
+                            unique_targets['AltNameSource'][i] = 'NED' 
+                            unique_targets['AltNameLink'][i] = '<a href="http://ned.ipac.caltech.edu/cgi-bin/objsearch?in_csys=Equatorial&in_equinox=J2000.0&lon='+str(ra)[0:8]+'d&lat='+str(dec)[0:8]+'d&radius=2.0&hconst=73&omegam=0.27&omegav=0.73&corr_z=1&search_type=Near+Position+Search&z_constraint=Unconstrained&z_value1=&z_value2=&z_unit=z&ot_include=ANY&nmp_op=ANY&out_csys=Equatorial&out_equinox=J2000.0&obj_sort=Distance+to+search+center&of=pre_text&zv_breaker=30000.0&list_limit=5&img_stamp=YES">'+unique_targets['AltName'][i]+'</a>' 
+                            found_a_name = True 
+             
+                        
+                    if ('G' in table[i_close]['main_col5']):
+                        print 'I found a G that meets the match criterion!' 
+                        g = table[i_close]  
+                        g_i_found = g[g['main_col5'] == 'G'] 
+                        print g_i_found.sort('main_col7')
+                        
+
+                        print 'Closest object redshift:  ' , table['main_col7'][i_close[0]][0], unique_targets['AltNameRedshift'][i]
+                        print 'Found G redshift: ' , g_i_found['main_col7'][0] 
+                        if ('0.0' in unique_targets['AltNameRedshift'][i]): 
+                            print 'I would rather switch the match to this G here:'  
+
+                            canonical_name = g_i_found['main_col2'][0] 
+                            ned_class = g_i_found['main_col5'][0]
+                            redshift = g_i_found['main_col7'][0] 
+                            angsep = g_i_found['main_col10'][0]  
+           
+                            print redshift 
+
+                            unique_targets['AltName'][i] = canonical_name
+                            unique_targets['AltNameRedshift'][i] = redshift
+                            unique_targets['AltNameClass'][i] = ned_class
+
+                            unique_targets['AltNameAngsep'][i] = angsep
+                            unique_targets['AltNameSource'][i] = 'NED' 
+                            unique_targets['AltNameLink'][i] = '<a href="http://ned.ipac.caltech.edu/cgi-bin/objsearch?in_csys=Equatorial&in_equinox=J2000.0&lon='+str(ra)[0:8]+'d&lat='+str(dec)[0:8]+'d&radius=2.0&hconst=73&omegam=0.27&omegav=0.73&corr_z=1&search_type=Near+Position+Search&z_constraint=Unconstrained&z_value1=&z_value2=&z_unit=z&ot_include=ANY&nmp_op=ANY&out_csys=Equatorial&out_equinox=J2000.0&obj_sort=Distance+to+search+center&of=pre_text&zv_breaker=30000.0&list_limit=5&img_stamp=YES">'+unique_targets['AltName'][i]+'</a>' 
+                            found_a_name = True 
+
+            except ValueError:
+                print('Problem reading xml for this target.')
 
             if found_a_name: print "Found a name match in NED using the coordinates, that name is . . . ", unique_targets['AltName'][i], ' and the redshift is z = ', unique_targets['AltNameRedshift'][i] 
 
@@ -180,16 +184,16 @@ def get_alt_names(catalog, database, outfile):
             command = command1 + target_name_string + command2 
             os.system(command)
 
-	    votable = parse("altnames.xml")  # otabin the output of SIMBAD as a VOTABLE
+            votable = parse("altnames.xml", invalid='mask')  # otabin the output of SIMBAD as a VOTABLE
             if np.size(votable.resources) > 0: # if the number of resources is > 0, use it
-                votable = parse_single_table("altnames.xml",pedantic=False).to_table()
+                votable = parse_single_table("altnames.xml",pedantic=False, invalid='mask').to_table()
     
                 if target_to_search in votable['TYPED_ID'][0]: 
                     canonical_name = votable['MAIN_ID'][0] 
 
                     simbad_class = votable['OTYPE_S'][0] 
 
-                    redshift = votable['Z_redshift'][0] 
+                    redshift = votable['Z_VALUE'][0] 
 
                     angsep = votable['ANG_DIST'][0] 
 
@@ -214,9 +218,9 @@ def get_alt_names(catalog, database, outfile):
                 command3 = 'd&CooFrame=FK5&CooEpoch=2000&CooEqui=2000&CooDefinedFrames=none&Radius=2&Radius.unit=arcmin&output.format=VOTable&submit=submit+query"'
                 command = command1 + str(unique_targets['RA (J2000)'][i]) + command2 + str(dec) + command3
                 os.system(command) 
-                votable = parse("altnames.xml")
+                votable = parse("altnames.xml", invalid='mask')
                 if np.size(votable.resources) > 0: # if the number of resources is > 0, use it
-                    votable = parse_single_table("altnames.xml",pedantic=False).to_table()
+                    votable = parse_single_table("altnames.xml",pedantic=False, invalid='mask').to_table()
     
                     i_close = np.where(votable['ANG_DIST'] < 3.0)
     
@@ -225,7 +229,7 @@ def get_alt_names(catalog, database, outfile):
     
                         simbad_class = votable['OTYPE_S'][i_close[0]]
     
-                        redshift = votable['Z_redshift'][i_close[0]]
+                        redshift = votable['Z_VALUE'][i_close[0]]
     
                         angsep = votable['ANG_DIST'][i_close[0]]
     
@@ -253,5 +257,3 @@ def get_alt_names(catalog, database, outfile):
     unique_targets.write(outfile+'_'+database+'.fits', format='fits', overwrite=True) 
 
     return unique_targets 
-
- 
