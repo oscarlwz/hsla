@@ -26,11 +26,16 @@ def ban_programs(targets):
                     print(pid_to_ban, mask)
                     exposure_cat['Flag'][mask] = 0
 
-                # Ban failed visits
+                # Ban failed visits and bad exposures
                 for i,root in enumerate(exposure_cat['Rootname']):
+                    # Ban failed visits
                     select = ((banned_visits['Proposal'] == exposure_cat['PropID'][i]) & 
                               (banned_visits['Visit'] == root[4:6]))
                     if len(banned_visits[select]) != 0:
+                        exposure_cat['Flag'][i] = 0  
+                    # Ban bad exposures
+                    fname = root + '_x1d.fits'
+                    if fits.getheader(fname,1)['EXPTIME'] / fits.getheader(fname,1)['PLANTIME'] == 0.0:
                         exposure_cat['Flag'][i] = 0
 
                 ascii.write(exposure_cat, "all_exposures.txt", overwrite=True)
