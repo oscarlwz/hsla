@@ -24,14 +24,13 @@ def ban_programs(targets):
                 # Ban bad proposals
                 for pid_to_ban in banned_programs_list['pid']:
                     mask = np.where(exposure_cat['PropID'] == pid_to_ban)
-                    print(pid_to_ban, mask)
                     exposure_cat['Flag'][mask] = 0
 
                 # Ban failed visits and bad exposures
                 for i,root in enumerate(exposure_cat['Rootname']):
                     # Ban failed visits
                     select = ((banned_visits['Proposal'] == exposure_cat['PropID'][i]) & 
-                              (banned_visits['Visit'] == root[4:6]))
+                              (banned_visits['Visit'] == root[4:6].upper()))
                     if len(banned_visits[select]) != 0:
                         exposure_cat['Flag'][i] = 0  
                     # Ban bad exposures
