@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 from astropy.io import ascii
+from astropy.io import fits
 import glob
 import numpy as np
 import os
